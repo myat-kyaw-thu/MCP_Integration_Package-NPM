@@ -1,0 +1,71 @@
+{
+  "name": "mcp-connect",
+  "version": "0.1.0",
+  "description": "Dead simple MCP (Model Context Protocol) server for exposing your app functions to AI agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "mcp-connect": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "bun run build:esm && bun run build:cjs",
+    "build:esm": "bun build src/index.ts --outdir dist --target node --format esm --external @types/node",
+    "build:cjs": "bun build src/index.ts --outdir dist --outfile index.cjs --target node --format cjs --external @types/node",
+    "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --external @types/node",
+    "dev": "bun run src/cli.ts",
+    "test": "vitest",
+    "test:unit": "vitest tests/unit",
+    "test:integration": "vitest tests/integration",
+    "prepublishOnly": "bun run build && bun run build:cli"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "agents",
+    "tools",
+    "claude",
+    "gpt",
+    "typescript",
+    "bun"
+  ],
+  "author": "myat-kyaw-thu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git"
+  },
+  "bugs": {
+    "url": "https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM/issues"
+  },
+  "homepage": "https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "4.5.0-dev.20210807"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}
