@@ -7,16 +7,16 @@
 
 ## 🚀 Quick Start
 
-\`\`\`bash
+```bash
 # Install
 npm install mcp-connect
 # or
 bun add mcp-connect
-\`\`\`
+```
 
 Create `mcp.config.ts`:
 
-\`\`\`typescript
+```typescript
 import { defineMCP } from "mcp-connect"
 
 export default defineMCP({
@@ -27,13 +27,13 @@ export default defineMCP({
     ["getTodos", async () => [{ id: 1, title: "Buy milk" }]],
   ]
 })
-\`\`\`
+```
 
 Start the server:
 
-\`\`\`bash
+```bash
 bunx mcp-connect
-\`\`\`
+```
 
 Connect your AI agent (like Claude Desktop) via STDIO transport!
 
@@ -52,7 +52,7 @@ Connect your AI agent (like Claude Desktop) via STDIO transport!
 
 ### Tool Definition Formats
 
-\`\`\`typescript
+```typescript
 // Tuple format (simple)
 ["toolName", async (args) => result]
 
@@ -63,11 +63,11 @@ Connect your AI agent (like Claude Desktop) via STDIO transport!
   handler: async (args) => result,
   schema: { /* JSON schema for input validation */ }
 }
-\`\`\`
+```
 
 ### Configuration Options
 
-\`\`\`typescript
+```typescript
 defineMCP({
   name: "My MCP Server",      // Required: Server name
   version: "1.0.0",           // Required: Server version
@@ -77,11 +77,11 @@ defineMCP({
     // Your tool definitions
   ]
 })
-\`\`\`
+```
 
 ## 🔧 CLI Usage
 
-\`\`\`bash
+```bash
 # Start server (looks for mcp.config.ts)
 bunx mcp-connect
 
@@ -93,7 +93,7 @@ MCP_PERF=1 bunx mcp-connect
 
 # Custom log level
 MCP_LOG_LEVEL=warn bunx mcp-connect
-\`\`\`
+```
 
 ## 🔍 Logging & Debugging
 
@@ -107,17 +107,17 @@ MCP-Connect includes comprehensive logging and debugging features:
 
 ### Log Output Examples
 
-\`\`\`
+```
 [MCP-INFO] 2024-01-15T10:30:45.123Z MCP server "Todo App" started (stdio, 3 tools)
 [MCP-DEBUG] 2024-01-15T10:30:46.456Z Tool execution started: addTodo [req:abc123]
 [MCP-INFO] 2024-01-15T10:30:46.478Z Tool execution completed: addTodo (22ms) [req:abc123]
-\`\`\`
+```
 
 ## ✅ Configuration Validation
 
 MCP-Connect provides comprehensive configuration validation with helpful error messages:
 
-\`\`\`
+```
 ❌ Configuration Errors:
   1. tools[0].name: Tool name must be a non-empty string
      Current value: ""
@@ -126,7 +126,7 @@ MCP-Connect provides comprehensive configuration validation with helpful error m
 ⚠️  Configuration Warnings:
   1. version: Version doesn't follow semantic versioning
      Suggestion: Use format: "1.0.0"
-\`\`\`
+```
 
 ## 🛡️ Error Handling
 
@@ -141,7 +141,7 @@ MCP-Connect provides comprehensive configuration validation with helpful error m
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
-\`\`\`json
+```json
 {
   "mcpServers": {
     "my-app": {
@@ -151,7 +151,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
     }
   }
 }
-\`\`\`
+```
 
 ### Other MCP Clients
 
@@ -166,7 +166,7 @@ Any MCP-compliant client can connect using the STDIO transport. The server imple
 
 ### Todo App Example
 
-\`\`\`typescript
+```typescript
 import { defineMCP } from "mcp-connect";
 
 const todos = [{ id: 1, title: "Buy milk", completed: false }];
@@ -198,13 +198,13 @@ export default defineMCP({
     }
   ]
 });
-\`\`\`
+```
 
 Check out the [examples](./examples) directory for complete working examples.
 
 ## 🛠 Development
 
-\`\`\`bash
+```bash
 # Clone and install
 git clone https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git
 cd mcp-connect
@@ -219,7 +219,7 @@ bun run build
 
 # Run tests
 bun run test
-\`\`\`
+```
 
 ## 🏗️ Architecture
 
