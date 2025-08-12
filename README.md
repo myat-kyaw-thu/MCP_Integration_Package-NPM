@@ -7,14 +7,16 @@
 
 ## 🚀 Quick Start
 
+### Option 1: Global Installation (Recommended)
+
 ```bash
-# Install
-npm install mcp-connect
+# Install globally
+npm install -g mcp-connect
 # or
-bun add mcp-connect
+bun add -g mcp-connect
 ```
 
-Create `mcp.config.ts`:
+Create `mcp.config.ts` in your project:
 
 ```typescript
 import { defineMCP } from "mcp-connect"
@@ -29,9 +31,26 @@ export default defineMCP({
 })
 ```
 
-Start the server:
+Start the server from your project directory:
 
 ```bash
+mcp-connect
+```
+
+### Option 2: Local Installation
+
+```bash
+# Install locally
+npm install mcp-connect
+# or
+bun add mcp-connect
+```
+
+Start with npx/bunx:
+
+```bash
+npx mcp-connect
+# or
 bunx mcp-connect
 ```
 
@@ -81,18 +100,31 @@ defineMCP({
 
 ## 🔧 CLI Usage
 
+### Global Installation
+
 ```bash
-# Start server (looks for mcp.config.ts)
-bunx mcp-connect
+# Start server (looks for mcp.config.ts in current directory)
+mcp-connect
 
 # With debug logging and performance tracking
-MCP_DEBUG=1 bunx mcp-connect
+MCP_DEBUG=1 mcp-connect
 
 # Performance tracking only
-MCP_PERF=1 bunx mcp-connect
+MCP_PERF=1 mcp-connect
 
 # Custom log level
-MCP_LOG_LEVEL=warn bunx mcp-connect
+MCP_LOG_LEVEL=warn mcp-connect
+```
+
+### Local Installation
+
+```bash
+# Using npx/bunx
+npx mcp-connect
+bunx mcp-connect
+
+# With environment variables
+MCP_DEBUG=1 npx mcp-connect
 ```
 
 ## 🔍 Logging & Debugging
@@ -139,14 +171,55 @@ MCP-Connect provides comprehensive configuration validation with helpful error m
 
 ### Claude Desktop
 
+#### Global Installation (Recommended)
+
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
   "mcpServers": {
     "my-app": {
-      "command": "bunx",
+      "command": "mcp-connect",
+      "cwd": "/path/to/your/project"
+    }
+  }
+}
+```
+
+#### Local Installation
+
+```json
+{
+  "mcpServers": {
+    "my-app": {
+      "command": "npx",
       "args": ["mcp-connect"],
+      "cwd": "/path/to/your/project"
+    }
+  }
+}
+```
+
+#### Alternative: Package Script
+
+Add to your project's `package.json`:
+
+```json
+{
+  "scripts": {
+    "mcp": "mcp-connect"
+  }
+}
+```
+
+Then in Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "my-app": {
+      "command": "npm",
+      "args": ["run", "mcp"],
       "cwd": "/path/to/your/project"
     }
   }
@@ -216,6 +289,11 @@ MCP_DEBUG=1 bun run ../../src/cli.ts
 
 # Build package
 bun run build
+
+# Test global installation locally
+npm link
+cd /path/to/test/project
+mcp-connect
 
 # Run tests
 bun run test
