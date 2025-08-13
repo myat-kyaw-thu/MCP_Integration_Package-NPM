@@ -4,7 +4,6 @@ import { existsSync } from "fs";
 import { resolve } from "path";
 import { defineMCP } from "./defineMCP.js";
 import { MCPConnectServer } from "./server/mcpServer.js";
-import { logger } from './utils/logger.js';
 
 /**
  * CLI entry point for mcp-connect
@@ -12,7 +11,7 @@ import { logger } from './utils/logger.js';
  */
 async function main() {
   try {
-    logger.info("Starting MCP-Connect CLI...");
+    console.error("Starting MCP-Connect CLI...");
 
     // Look for config file in current directory
     const configPaths = ["mcp.config.ts", "mcp.config.js", "mcp.config.mjs"];
@@ -27,36 +26,60 @@ async function main() {
     }
 
     if (!configPath) {
-      logger.error("No MCP config file found. Create mcp.config.ts in your project root.");
-      logger.info("Example config:", `
-      import { defineMCP } from "mcp-connect"
+      console.error("No MCP config file found. Create mcp.config.ts in your project root.");
+      console.error("Example config:");
+      console.error(`
+import { defineMCP } from "mcp-connect"
 
-      export default defineMCP({
-        name: "My App",
-        version: "1.0.0",
-        tools: [
-          ["hello", async ({ name }) => \`Hello \${name}!\`]
-        ]
-      })
+export default defineMCP({
+  name: "My App",
+  version: "1.0.0",
+  tools: [
+    ["hello", async ({ name }) => \`Hello \${name}!\`]
+  ]
+})
       `);
       process.exit(1);
     }
 
-    logger.info(`Loading config from: ${configPath}`);
+    console.error(`Loading config from: ${configPath}`);
 
-    // Dynamic import the config with better error handling
     let configModule;
     try {
-      configModule = await import(`file://${configPath}`);
+      // Use Bun's native TypeScript support or Node.js with proper error handling
+      const isBunRuntime = typeof Bun !== "undefined" ||
+        process.argv[0]?.includes('bun') ||
+        process.env.BUN_RUNTIME ||
+        process.env.npm_execpath?.includes('bun') ||
+        process.argv.some(arg => arg.includes('bunx'));
+
+      if (isBunRuntime) {
+        // Running with Bun - native TypeScript support
+        const fileUrl = configPath.startsWith('/') ? `file://${configPath}` : `file:///${configPath.replace(/\\/g, '/')}`;
+        configModule = await import(fileUrl);
+      } else {
+        // Running with Node.js - need to handle TypeScript differently
+        if (configPath.endsWith(".ts")) {
+          console.error("TypeScript config detected. For Node.js compatibility:");
+          console.error("1. Rename mcp.config.ts to mcp.config.js");
+          console.error("2. Or run with: bunx mcp-connect");
+          console.error("3. Or install tsx: npx tsx node_modules/mcp-connect/dist/cli.js");
+          process.exit(1);
+        }
+        configModule = await import(`file://${configPath}`);
+      }
     } catch (error) {
-      logger.error("Failed to load config file", error);
+      console.error("Failed to load config file:");
       if (error instanceof Error) {
-        if (error.message.includes("SyntaxError")) {
-          logger.error("Syntax error in config file. Check your TypeScript/JavaScript syntax.");
-        } else if (error.message.includes("EACCES")) {
-          logger.error("Permission denied. Check file permissions.");
-        } else if (error.message.includes("MODULE_NOT_FOUND")) {
-          logger.error("Missing dependencies. Run 'bun install' or 'npm install'.");
+        console.error("Error:", error.message);
+
+        if (error.message.includes("Cannot resolve")) {
+          console.error("Make sure 'mcp-connect' is installed: npm install mcp-connect");
+        } else if (configPath.endsWith(".ts") && typeof Bun === "undefined") {
+          console.error("TypeScript files require Bun or compilation.");
+          console.error("Quick fixes:");
+          console.error("1. Run with Bun: bunx mcp-connect");
+          console.error("2. Rename to .js: mv mcp.config.ts mcp.config.js");
         }
       }
       process.exit(1);
@@ -65,8 +88,8 @@ async function main() {
     const config = configModule.default;
 
     if (!config) {
-      logger.error("Config file must export a default configuration");
-      logger.info("Make sure your config file has: export default defineMCP({...})");
+      console.error("Config file must export a default configuration");
+      console.error("Make sure your config has: export default defineMCP({...})");
       process.exit(1);
     }
 
@@ -75,8 +98,7 @@ async function main() {
     try {
       validatedConfig = typeof config === "function" ? config : defineMCP(config);
     } catch (error) {
-      logger.error("Configuration validation failed", error);
-
+      console.error("Configuration validation failed:", error);
       process.exit(1);
     }
 
@@ -84,15 +106,34 @@ async function main() {
     const server = new MCPConnectServer(validatedConfig);
     await server.start();
 
-    // Graceful shutdown is now handled in MCPConnectServer
+    // Handle graceful shutdown
+    process.on("SIGINT", async () => {
+      console.error("Shutting down...");
+      process.exit(0);
+    });
+
+    process.on("SIGTERM", async () => {
+      console.error("Shutting down...");
+      process.exit(0);
+    });
   } catch (error) {
-    console.error("Failed to start MCP server:");
-    logger.error("Failed to start MCP server", error);
+    console.error("Failed to start MCP server:", error);
     process.exit(1);
   }
 }
 
 // Run CLI if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+// Multiple checks to ensure main() runs when CLI is executed
+const isMainModule = process.argv[1] && (
+  import.meta.url === `file://${process.argv[1]}` ||
+  import.meta.url.endsWith(process.argv[1]) ||
+  process.argv[1].endsWith('cli.js') ||
+  process.argv[1].includes('mcp-connect')
+);
+
+if (isMainModule) {
+  main().catch((error) => {
+    console.error("CLI startup failed:", error);
+    process.exit(1);
+  });
 }
