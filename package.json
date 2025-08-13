@@ -1,6 +1,6 @@
 {
   "name": "mcp-connect",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dead simple MCP (Model Context Protocol) server for exposing your app functions to AI agents",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,8 +23,8 @@
   ],
   "scripts": {
     "build": "bun run build:esm && bun run build:cjs",
-    "build:esm": "bun build src/index.ts --outdir dist --target node --format esm --external @types/node",
-    "build:cjs": "bun build src/index.ts --outdir dist --outfile index.cjs --target node --format cjs --external @types/node",
+    "build:esm": "bun build src/index.ts --outdir dist --target node --format esm --external @types/node && tsc --project tsconfig.build.json",
+    "build:cjs": "bun build src/index.ts --outfile dist/index.cjs --target node --format cjs --external @types/node",
     "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --external @types/node",
     "dev": "bun run src/cli.ts",
     "test": "vitest",
@@ -60,7 +60,8 @@
     "typescript": "4.5.0-dev.20210807"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0"
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
