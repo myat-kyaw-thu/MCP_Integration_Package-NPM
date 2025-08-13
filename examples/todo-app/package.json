@@ -1,0 +1,12 @@
+{
+  "name": "mcp-connect-todo-example",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bunx mcp-connect",
+    "dev": "bun run ../../src/cli.ts"
+  },
+  "dependencies": {
+    "mcp-connect": "workspace:*"
+  }
+}
