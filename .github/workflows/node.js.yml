@@ -1,5 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, 
-# build the source code and run tests across different versions of node
+# .github/workflows/node.js.yml
 
 name: Node.js CI
 
@@ -25,8 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
       - run: npm install
-
       - run: npm test
