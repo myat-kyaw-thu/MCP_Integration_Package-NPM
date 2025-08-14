@@ -10,15 +10,13 @@
 ### Option 1: Global Installation (Recommended)
 
 ```bash
-# Install globally
+# Install globally with npm
 npm install -g mcp-connect
-# or
-bun add -g mcp-connect
 ```
 
-Create `mcp.config.ts` in your project:
+Create `mcp.config.js` in your project:
 
-```typescript
+```javascript
 import { defineMCP } from "mcp-connect"
 
 export default defineMCP({
@@ -40,30 +38,27 @@ mcp-connect
 ### Option 2: Local Installation
 
 ```bash
-# Install locally
+# Install locally with npm
 npm install mcp-connect
-# or
-bun add mcp-connect
 ```
 
-Start with npx/bunx:
+Start with npx:
 
 ```bash
 npx mcp-connect
-# or
-bunx mcp-connect
 ```
 
-Connect your AI agent (like Claude Desktop) via STDIO transport!
+Connect your AI agent via STDIO transport (Claude Desktop)!
 
 ## 🎯 Features
 
 - **Zero Config** - Works out of the box with minimal setup
-- **MCP Compliant** - Uses official MCP SDK with JSON-RPC 2.0 and STDIO transport
-- **Type Safe** - Full TypeScript support with comprehensive validation
+- **MCP Compliant** - Uses official MCP SDK with JSON-RPC 2.0
+- **STDIO Transport** - Direct communication with Claude Desktop and other MCP clients
+- **Pure JavaScript** - No compilation needed, runs directly on Node.js 18+
 - **Production Ready** - Enterprise-grade error handling and logging
 - **Performance Monitoring** - Built-in execution timing and debugging
-- **Universal** - Works with npm, pnpm, yarn, bun, and deno
+- **Universal** - Works with npm, pnpm, and yarn
 - **Claude Desktop Ready** - Works seamlessly with Claude Desktop and other MCP clients
 - **Simple API** - Clean, declarative tool definitions with flexible formats
 
@@ -71,7 +66,7 @@ Connect your AI agent (like Claude Desktop) via STDIO transport!
 
 ### Tool Definition Formats
 
-```typescript
+```javascript
 // Tuple format (simple)
 ["toolName", async (args) => result]
 
@@ -86,12 +81,11 @@ Connect your AI agent (like Claude Desktop) via STDIO transport!
 
 ### Configuration Options
 
-```typescript
+```javascript
 defineMCP({
   name: "My MCP Server",      // Required: Server name
   version: "1.0.0",           // Required: Server version
   description: "My server",   // Optional: Description
-  transport: "stdio",         // Transport type (stdio for Claude Desktop)
   tools: [
     // Your tool definitions
   ]
@@ -119,9 +113,8 @@ MCP_LOG_LEVEL=warn mcp-connect
 ### Local Installation
 
 ```bash
-# Using npx/bunx
+# Using npx
 npx mcp-connect
-bunx mcp-connect
 
 # With environment variables
 MCP_DEBUG=1 npx mcp-connect
@@ -239,7 +232,7 @@ Any MCP-compliant client can connect using the STDIO transport. The server imple
 
 ### Todo App Example
 
-```typescript
+```javascript
 import { defineMCP } from "mcp-connect";
 
 const todos = [{ id: 1, title: "Buy milk", completed: false }];
@@ -281,14 +274,11 @@ Check out the [examples](./examples) directory for complete working examples.
 # Clone and install
 git clone https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git
 cd mcp-connect
-bun install
+npm install
 
 # Run example with debug logging
 cd examples/todo-app
-MCP_DEBUG=1 bun run ../../src/cli.ts
-
-# Build package
-bun run build
+MCP_DEBUG=1 node ../../src/cli.js
 
 # Test global installation locally
 npm link
@@ -296,17 +286,22 @@ cd /path/to/test/project
 mcp-connect
 
 # Run tests
-bun run test
+npm test
+
+# Lint and format code
+npm run lint
+npm run format
 ```
 
 ## 🏗️ Architecture
 
-- **TypeScript-first** with strict type checking
-- **ESM + CJS** dual package support
-- **Bun-optimized** build system
+- **Pure JavaScript** with JSDoc type annotations
+- **ESM modules** with Node.js 18+ support
+- **Express.js** HTTP server integration
 - **Official MCP SDK** integration
 - **Structured logging** with performance metrics
 - **Comprehensive validation** with user-friendly errors
+- **Pure MCP implementation** focused on STDIO transport
 
 ## 📄 License
 
