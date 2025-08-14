@@ -1,4 +1,4 @@
-import { defineMCP } from '../../dist/index.js';
+import { defineMCP } from '../../src/index.js';
 // Simple todo list storage
 const todos = [
   { id: 1, title: "Buy milk", completed: false },

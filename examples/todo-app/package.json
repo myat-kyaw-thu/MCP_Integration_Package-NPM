@@ -1,12 +1,16 @@
 {
   "name": "mcp-connect-todo-example",
   "version": "1.0.0",
+  "description": "This example demonstrates how to use mcp-connect to create a simple todo list that AI agents can interact with.",
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "mcp.config.js",
   "scripts": {
-    "start": "bunx mcp-connect",
-    "dev": "bun run ../../src/cli.ts"
+    "start": "npx mcp-connect",
+    "dev": "node ../../src/cli.js"
   },
   "dependencies": {
-    "mcp-connect": "workspace:*"
+    "mcp-connect": "^0.1.1"
   }
 }

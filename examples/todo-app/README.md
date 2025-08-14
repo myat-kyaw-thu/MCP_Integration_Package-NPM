@@ -12,13 +12,13 @@ This example demonstrates how to use mcp-connect to create a simple todo list th
 
 ```bash
 # Install dependencies
-bun install
+npm install
 
 # Start the MCP server
-bun start
+npm start
 
 # Or run in development mode
-bun dev
+npm run dev
 ```
 
 ## Claude Desktop Integration
@@ -29,7 +29,7 @@ Add this to your Claude Desktop config:
 {
   "mcpServers": {
     "todo-app": {
-      "command": "bunx",
+      "command": "npx",
       "args": ["mcp-connect"],
       "cwd": "/path/to/mcp-connect/examples/todo-app"
     }
