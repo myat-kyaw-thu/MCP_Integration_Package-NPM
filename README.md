@@ -7,17 +7,17 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Global Installation (Recommended)
+### Installation
 
 ```bash
 # Install globally with npm
-npm install -g mcp-connect
+npm install -g @myatkyawthu/mcp-connect
 ```
 
 Create `mcp.config.js` in your project:
 
 ```javascript
-import { defineMCP } from "mcp-connect"
+import { defineMCP } from '@myatkyawthu/mcp-connect';
 
 export default defineMCP({
   name: "My App",
@@ -26,26 +26,13 @@ export default defineMCP({
     ["hello", async ({ name }) => `Hello ${name}!`],
     ["getTodos", async () => [{ id: 1, title: "Buy milk" }]],
   ]
-})
+});
 ```
 
 Start the server from your project directory:
 
 ```bash
 mcp-connect
-```
-
-### Option 2: Local Installation
-
-```bash
-# Install locally with npm
-npm install mcp-connect
-```
-
-Start with npx:
-
-```bash
-npx mcp-connect
 ```
 
 Connect your AI agent via STDIO transport (Claude Desktop)!
@@ -97,136 +84,102 @@ defineMCP({
 ### Global Installation
 
 ```bash
-# Start server (looks for mcp.config.ts in current directory)
+# Install globally
+npm install -g @myatkyawthu/mcp-connect
+
+# Start server (looks for mcp.config.js in current directory)
 mcp-connect
 
-# With debug logging and performance tracking
-MCP_DEBUG=1 mcp-connect
-
-# Performance tracking only
-MCP_PERF=1 mcp-connect
-
-# Custom log level
-MCP_LOG_LEVEL=warn mcp-connect
+# Start server with specific config file
+mcp-connect /path/to/your/mcp.config.js
 ```
 
 ### Local Installation
 
 ```bash
-# Using npx
-npx mcp-connect
-
-# With environment variables
-MCP_DEBUG=1 npx mcp-connect
+# Using npx with the published package
+npx @myatkyawthu/mcp-connect
 ```
 
 ## 🔍 Logging & Debugging
 
-MCP-Connect includes comprehensive logging and debugging features:
-
-### Environment Variables
-
-- `MCP_DEBUG=1` - Enable debug logging with full MCP message tracing
-- `MCP_PERF=1` - Enable performance tracking for tool execution times
-- `MCP_LOG_LEVEL=level` - Set minimum log level (debug, info, warn, error)
+MCP-Connect includes structured logging for debugging:
 
 ### Log Output Examples
 
 ```
-[MCP-INFO] 2024-01-15T10:30:45.123Z MCP server "Todo App" started (stdio, 3 tools)
-[MCP-DEBUG] 2024-01-15T10:30:46.456Z Tool execution started: addTodo [req:abc123]
-[MCP-INFO] 2024-01-15T10:30:46.478Z Tool execution completed: addTodo (22ms) [req:abc123]
+Starting MCP-Connect CLI...
+Loading config from: /path/to/mcp.config.js
+[MCP-WARN] 2025-08-14T15:16:19.802Z Configuration warnings
+[MCP-INFO] 2025-08-14T15:16:19.803Z MCP server "Todo App" started
 ```
 
-## ✅ Configuration Validation
+All logging goes to stderr (as required by MCP protocol), leaving stdout clean for JSON communication.
 
-MCP-Connect provides comprehensive configuration validation with helpful error messages:
+## ✅ Features
 
-```
-❌ Configuration Errors:
-  1. tools[0].name: Tool name must be a non-empty string
-     Current value: ""
-     Suggestion: "myToolName"
-
-⚠️  Configuration Warnings:
-  1. version: Version doesn't follow semantic versioning
-     Suggestion: Use format: "1.0.0"
-```
-
-## 🛡️ Error Handling
-
-- **Tool Execution Timeouts** - 30-second default timeout prevents hanging
+- **Configuration Validation** - Comprehensive validation with helpful error messages
+- **Tool Execution Timeouts** - 30-second default timeout prevents hanging  
 - **Graceful Shutdown** - Proper cleanup on SIGINT/SIGTERM
 - **Sanitized Errors** - Safe error messages without sensitive information
-- **MCP-Compliant Errors** - Proper JSON-RPC error format
+- **MCP Protocol Compliance** - Full JSON-RPC 2.0 over STDIO implementation
 
-## 🤝 AI Agent Integration
+## 🤝 Claude Desktop Integration
 
-### Claude Desktop
+### Step 1: Install the Package
 
-#### Global Installation (Recommended)
+```bash
+npm install -g @myatkyawthu/mcp-connect
+```
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+### Step 2: Create Your Config File
+
+Create `mcp.config.js` in your project directory:
+
+```javascript
+import { defineMCP } from '@myatkyawthu/mcp-connect';
+
+export default defineMCP({
+  name: "My App",
+  version: "1.0.0",
+  tools: [
+    ["hello", async ({ name }) => `Hello ${name}!`]
+  ]
+});
+```
+
+### Step 3: Configure Claude Desktop
+
+Add to your Claude Desktop config:
+
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "my-app": {
       "command": "mcp-connect",
-      "cwd": "/path/to/your/project"
+      "args": ["C:/full/path/to/your/mcp.config.js"]
     }
   }
 }
 ```
 
-#### Local Installation
+**Important**: Use the full absolute path to your config file in the `args` array.
 
-```json
-{
-  "mcpServers": {
-    "my-app": {
-      "command": "npx",
-      "args": ["mcp-connect"],
-      "cwd": "/path/to/your/project"
-    }
-  }
-}
-```
+### Step 4: Restart Claude Desktop
 
-#### Alternative: Package Script
-
-Add to your project's `package.json`:
-
-```json
-{
-  "scripts": {
-    "mcp": "mcp-connect"
-  }
-}
-```
-
-Then in Claude Desktop config:
-
-```json
-{
-  "mcpServers": {
-    "my-app": {
-      "command": "npm",
-      "args": ["run", "mcp"],
-      "cwd": "/path/to/your/project"
-    }
-  }
-}
-```
+Completely restart Claude Desktop and test with: **"What tools do you have available?"**
 
 ### Other MCP Clients
 
-Any MCP-compliant client can connect using the STDIO transport. The server implements the full MCP specification with:
+Any MCP-compliant client can connect using the STDIO transport. The server implements:
 
 - `tools/list` - List available tools
-- `tools/call` - Execute tool functions
-- Proper JSON-RPC 2.0 messaging
-- Standard MCP lifecycle management
+- `tools/call` - Execute tool functions  
+- JSON-RPC 2.0 messaging over STDIO
+- Proper error handling and logging
 
 ## 📁 Examples
 
@@ -273,22 +226,18 @@ Check out the [examples](./examples) directory for complete working examples.
 ```bash
 # Clone and install
 git clone https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git
-cd mcp-connect
+cd MCP_Indigration_Package-NPM
 npm install
 
-# Run example with debug logging
+# Test locally with the todo example
 cd examples/todo-app
-MCP_DEBUG=1 node ../../src/cli.js
+node ../../src/cli.js
 
 # Test global installation locally
 npm link
-cd /path/to/test/project
 mcp-connect
 
-# Run tests
-npm test
-
-# Lint and format code
+# Run linting and formatting
 npm run lint
 npm run format
 ```
