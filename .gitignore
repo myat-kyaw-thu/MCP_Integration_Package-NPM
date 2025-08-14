@@ -1,5 +1,8 @@
-# dependencies (bun install)
+# dependencies (npm install)
+package-lock.json
 node_modules
+
+.kiro
 
 # output
 out
