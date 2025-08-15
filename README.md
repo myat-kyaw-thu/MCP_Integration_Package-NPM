@@ -45,7 +45,7 @@ Add to your Claude Desktop config file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-```son
+```
 {
   "mcpServers": {
     "my-app": {
