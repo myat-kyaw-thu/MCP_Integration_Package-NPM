@@ -36,7 +36,9 @@ Run from your project directory to test the server:
 mcp-connect
 ```
 You should see:
+```ash
 [MCP-INFO] MCP server "My App" started
+```
 ```
 ### Step 4: Configure Claude Desktop
 
@@ -45,7 +47,7 @@ Add to your Claude Desktop config file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-```
+```ash
 {
   "mcpServers": {
     "my-app": {
