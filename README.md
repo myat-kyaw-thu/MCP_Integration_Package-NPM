@@ -5,49 +5,50 @@
 [![npm version](https://badge.fury.io/js/mcp-connect.svg)](https://www.npmjs.com/package/mcp-connect)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Quick Start
+## 🚀 Claude Desktop Setup (5 Minutes)
 
-### Step 1: Install Globally
+### Step 1: Install mcp-connect
 
-```ash
+```bash
 npm install -g @myatkyawthu/mcp-connect
 ```
 ### Step 2: Create mcp.config.js
 
-Create `mcp.config.js` in your project directory:
+### Step 2: Create Your MCP Server
 
-```avascript
-import { defineMCP } from '@myatkyawthu/mcp-connect';
+```bash
+# Navigate to your project directory
+cd your-project
+
+# Generate sample config
+mcp-connect init
+```
+
+This creates `mcp.config.js` with example tools:
+
+```javascript
+import { defineMCP } from "@myatkyawthu/mcp-connect";
 
 export default defineMCP({
-  name: "My App",
+  name: "My MCP App",
   version: "1.0.0",
   tools: [
-    ["hello", async ({ name }) => `Hello ${name}!`],
-    ["getTodos", async () => [{ id: 1, title: "Buy milk", completed: false }]],
+    ["hello", async ({ name = "World" }) => `Hello ${name}!`],
+    ["echo", async ({ message }) => `Echo: ${message}`]
   ]
 });
 ```
 ### Step 3: Test Locally
 
-Run from your project directory to test the server:
+### Step 3: Configure Claude Desktop
 
-```ash
-mcp-connect
-```
-You should see:
-```ash
-[MCP-INFO] MCP server "My App" started
-```
-```
-### Step 4: Configure Claude Desktop
+Open Claude Desktop config file:
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-Add to your Claude Desktop config file:
+Add your MCP server:
 
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-```ash
+```json
 {
   "mcpServers": {
     "my-app": {
@@ -57,131 +58,113 @@ Add to your Claude Desktop config file:
   }
 }
 ```
-**Important**: Use the full absolute path to your config file.
 
-### Step 5: Restart Claude Desktop
+**Important**: Use the full absolute path to your `mcp.config.js` file.
 
-Restart Claude Desktop completely and test with: **"What tools do you have available?"**
+### Step 4: Start & Test
 
-## 🎯 Features
+1. **Restart Claude Desktop** completely
+2. **Test connection**: Ask Claude *"What tools do you have available?"*
+3. **Use your tools**: Try *"Hello there!"* or *"Echo this message"*
 
-- **Zero Config** - Works out of the box with minimal setup
-- **MCP Compliant** - Uses official MCP SDK with JSON-RPC 2.0
-- **STDIO Transport** - Direct communication with Claude Desktop
-- **Pure JavaScript** - No compilation needed, runs on Node.js 18+
-- **Production Ready** - Enterprise-grade error handling and logging
-- **Global Installation** - Run from anywhere, no project dependencies
+✅ **Done!** Your functions are now available to Claude Desktop.
 
-## 📖 Configuration
+---
 
-### Tool Definition Formats
+## 📖 Tool Definition Guide
 
-```avascript
-// Simple tuple format
-["toolName", async (args) => result]
+### Simple Format (Recommended)
 
-// Object format with validation
-{
-  name: "toolName",
-  description: "What this tool does",
-  handler: async (args) => result,
-  schema: { /* JSON schema for input validation */ }
-}
-```
-### Configuration Options
-
-```avascript
-defineMCP({
-  name: "My MCP Server",      // Required: Server name
-  version: "1.0.0",           // Required: Server version
-  description: "My server",   // Optional: Description
-  tools: [
-    // Your tool definitions
-  ]
-})
-```
-## 📁 Example: Todo App
-
-```avascript
-import { defineMCP } from '@myatkyawthu/mcp-connect';
-
-const todos = [{ id: 1, title: "Buy milk", completed: false }];
-
-export default defineMCP({
-  name: "Todo App",
-  version: "1.0.0",
-  description: "Simple todo list management",
-  tools: [
-    // Get all todos
-    ["getTodos", async () => todos],
-    
-    // Add new todo with validation
-    {
-      name: "addTodo",
-      description: "Add a new todo item",
-      schema: {
-        type: "object",
-        properties: {
-          title: { type: "string", description: "Todo title" }
-        },
-        required: ["title"]
-      },
-      handler: async ({ title }) => {
-        const newTodo = { id: Date.now(), title, completed: false };
-        todos.push(newTodo);
-        return newTodo;
-      }
-    },
-    
-    // Toggle todo completion
-    ["toggleTodo", async ({ id }) => {
-      const todo = todos.find(t => t.id === id);
-      if (todo) {
-        todo.completed = !todo.completed;
-        return todo;
-      }
-      throw new Error("Todo not found");
-    }]
-  ]
-});
+```javascript
+// Just name and function
+["toolName", async (args) => "result"]
 ```
 ## 🔧 CLI Usage
 
-```ash
-# Start server (looks for mcp.config.js in current directory)
-mcp-connect
+### Advanced Format (With Validation)
+
+```javascript
+{
+  name: "toolName",
+  description: "What this tool does",
+  schema: {
+    type: "object",
+    properties: {
+      param: { type: "string", description: "Parameter description" }
+    },
+    required: ["param"]
+  },
+  handler: async ({ param }) => `Result: ${param}`
+}
+```
+
+## 🛠 Development Commands
+
+```bash
+# Start with auto-reload during development
+npm run dev
 
 # Start server with specific config file
 mcp-connect /path/to/your/mcp.config.js
 
-# Using npx (alternative)
-npx @myatkyawthu/mcp-connect
-```
-## 🔍 Debugging
-
-All logs go to stderr, keeping stdout clean for MCP communication:
-
-```Starting MCP-Connect CLI...
-Loading config from: /path/to/mcp.config.js
-[MCP-INFO] 2025-08-14T15:16:19.803Z MCP server "Todo App" started
-[MCP-WARN] 2025-08-14T15:16:19.802Z Configuration warnings (if any)
-```
-## 🛠 Development
-
-```ash
-# Clone and install
-git clone https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git
-cd MCP_Indigration_Package-NPM
-npm install
-
-# Test locally
-npm link
-mcp-connect
-
-# Run linting
-npm run lint
+# Format code
 npm run format
+
+# Lint code
+npm run lint
 ```
+
+## 🔧 Troubleshooting
+
+### Config File Not Found
+```bash
+# Create sample config
+mcp-connect init
+```
+
+### Claude Desktop Not Connecting
+1. Check config file path is absolute
+2. Restart Claude Desktop completely
+3. Check Claude Desktop logs for errors
+
+### Tool Not Working
+1. Verify tool syntax in `mcp.config.js`
+2. Check server logs for errors
+3. Test with simple tools first
+
+## 📋 Examples
+
+### File Operations
+```javascript
+["readFile", async ({ path }) => {
+  const fs = await import('fs/promises');
+  return await fs.readFile(path, 'utf8');
+}]
+```
+
+### API Calls
+```javascript
+["getWeather", async ({ city }) => {
+  const response = await fetch(`https://api.weather.com/${city}`);
+  return await response.json();
+}]
+```
+
+### Database Queries
+```javascript
+["getUser", async ({ id }) => {
+  // Your database logic here
+  return { id, name: "John Doe", email: "john@example.com" };
+}]
+```
+
+## 🌐 Other MCP Clients
+
+Claude Desktop setup is covered above. Tutorials for other MCP clients coming soon:
+- VS Code extensions
+- Custom applications
+- Other AI platforms
+
 ## 📄 License
 
 MIT © [myat-kyaw-thu](https://github.com/myat-kyaw-thu)
