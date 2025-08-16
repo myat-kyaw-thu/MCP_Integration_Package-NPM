@@ -1,9 +1,72 @@
 #!/usr/bin/env node
 
-import { existsSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { defineMCP } from "./defineMCP.js";
 import { MCPConnectServer } from "./server/mcpServer.js";
+
+/**
+ * Handle init command - create sample config file
+ */
+async function handleInitCommand() {
+  const configPath = resolve(process.cwd(), 'mcp.config.js');
+
+  if (existsSync(configPath)) {
+    console.error("❌ mcp.config.js already exists in current directory");
+    console.error("Remove it first or run mcp-connect in a different directory");
+    process.exit(1);
+  }
+
+  const sampleConfig = `import { defineMCP } from "@myatkyawthu/mcp-connect";
+
+export default defineMCP({
+  name: "My MCP App",
+  version: "1.0.0",
+  description: "My awesome MCP server",
+  tools: [
+    // Simple tuple format: [name, handler]
+    ["hello", async ({ name = "World" }) => \`Hello \${name}!\`],
+    
+    // Object format with schema validation
+    {
+      name: "echo",
+      description: "Echo back the input",
+      schema: {
+        type: "object",
+        properties: {
+          message: { type: "string", description: "Message to echo" }
+        },
+        required: ["message"]
+      },
+      handler: async ({ message }) => \`Echo: \${message}\`
+    }
+  ]
+});
+`;
+
+  try {
+    writeFileSync(configPath, sampleConfig, 'utf8');
+    console.error("✅ Created mcp.config.js");
+    console.error("");
+    console.error("Next steps:");
+    console.error("1. Edit mcp.config.js to add your tools");
+    console.error("2. Run: mcp-connect");
+    console.error("3. Connect your AI agent via STDIO transport");
+    console.error("");
+    console.error("Example Claude Desktop config:");
+    console.error(`{
+  "mcpServers": {
+    "my-app": {
+      "command": "mcp-connect",
+      "args": ["${configPath}"]
+    }
+  }
+}`);
+  } catch (error) {
+    console.error("❌ Failed to create config file:", error.message);
+    process.exit(1);
+  }
+}
 
 /**
  * CLI entry point for mcp-connect
@@ -11,6 +74,12 @@ import { MCPConnectServer } from "./server/mcpServer.js";
  */
 async function main() {
   try {
+    // Handle init command
+    if (process.argv[2] === 'init') {
+      await handleInitCommand();
+      return;
+    }
+
     console.error("Starting MCP-Connect CLI...");
 
     // Check if config file path is provided as argument
@@ -42,9 +111,13 @@ async function main() {
 
     if (!configPath) {
       console.error("No MCP config file found. Create mcp.config.js in your project root.");
-      console.error("Example config:");
+      console.error("");
+      console.error("Would you like to create a sample config? Run:");
+      console.error("  mcp-connect init");
+      console.error("");
+      console.error("Or create mcp.config.js manually:");
       console.error(`
-import { defineMCP } from "mcp-connect"
+import { defineMCP } from "@myatkyawthu/mcp-connect";
 
 export default defineMCP({
   name: "My App",
@@ -52,7 +125,7 @@ export default defineMCP({
   tools: [
     ["hello", async ({ name }) => \`Hello \${name}!\`]
   ]
-})
+});
       `);
       process.exit(1);
     }
