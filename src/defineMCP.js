@@ -1,11 +1,11 @@
-import { formatValidationErrors, validateConfig } from "./utils/configValidation.js";
-import { logger } from "./utils/logger.js";
+import { formatValidationErrors, validateConfig } from './utils/configValidation.js';
+import { logger } from './utils/logger.js';
 
 /**
  * Define MCP configuration with tools and server settings
  * This is the main user-facing API that converts simple tool definitions
  * into MCP-compliant format with comprehensive validation
- * 
+ *
  * @param {Object} config - Configuration object
  * @param {string} config.name - Server name
  * @param {string} config.version - Server version
@@ -20,14 +20,18 @@ export function defineMCP(config) {
 
   if (!validationResult.isValid) {
     const errorMessage = formatValidationErrors(validationResult);
-    logger.error("Configuration validation failed", errorMessage);
+    logger.error('Configuration validation failed', errorMessage);
     throw new Error(`Invalid MCP configuration:\n${errorMessage}`);
   }
 
   // Log warnings if any
   if (validationResult.warnings.length > 0) {
-    const warningMessage = formatValidationErrors({ isValid: true, errors: [], warnings: validationResult.warnings });
-    logger.warn("Configuration warnings", warningMessage);
+    const warningMessage = formatValidationErrors({
+      isValid: true,
+      errors: [],
+      warnings: validationResult.warnings,
+    });
+    logger.warn('Configuration warnings', warningMessage);
   }
 
   // Convert validated tool definitions to MCP format
@@ -40,7 +44,7 @@ export function defineMCP(config) {
         name: name.trim(),
         description: `Tool: ${name}`,
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {},
           additionalProperties: true,
         },
@@ -53,7 +57,7 @@ export function defineMCP(config) {
         name: name.trim(),
         description: description || `Tool: ${name}`,
         inputSchema: schema || {
-          type: "object",
+          type: 'object',
           properties: {},
           additionalProperties: true,
         },
