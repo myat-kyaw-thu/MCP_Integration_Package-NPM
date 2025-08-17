@@ -1,6 +1,6 @@
 {
   "name": "@myatkyawthu/mcp-connect",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Dead simple MCP (Model Context Protocol) server for exposing your app functions to AI agents",
   "type": "module",
   "main": "./src/index.js",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "mcp-connect": "./src/cli.js"
+    "mcp-connect": "src/cli.js"
   },
   "files": [
     "src",
@@ -43,7 +43,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git"
+    "url": "git+https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM.git"
   },
   "bugs": {
     "url": "https://github.com/myat-kyaw-thu/MCP_Indigration_Package-NPM/issues"
