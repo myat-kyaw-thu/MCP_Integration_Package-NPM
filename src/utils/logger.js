@@ -29,17 +29,18 @@ class MCPLogger {
     /** @type {LogLevel} */
     this.logLevel = 'info';
     /** @type {boolean} */
-    this.debugMode = process.env.MCP_DEBUG === "1" || process.env.MCP_DEBUG === "true";
+    this.debugMode = process.env.MCP_DEBUG === '1' || process.env.MCP_DEBUG === 'true';
     /** @type {boolean} */
-    this.performanceTracking = process.env.MCP_PERF === "1" || process.env.MCP_PERF === "true" || this.debugMode;
+    this.performanceTracking =
+      process.env.MCP_PERF === '1' || process.env.MCP_PERF === 'true' || this.debugMode;
 
     // Set log level based on environment
     if (this.debugMode) {
-      this.logLevel = "debug";
+      this.logLevel = 'debug';
     } else if (process.env.MCP_LOG_LEVEL) {
       this.logLevel = /** @type {LogLevel} */ (process.env.MCP_LOG_LEVEL);
     } else {
-      this.logLevel = "info";
+      this.logLevel = 'info';
     }
   }
 
@@ -110,7 +111,7 @@ class MCPLogger {
 
     if (data && this.debugMode) {
       output(logMessage);
-      output("Data:", typeof data === "string" ? data : JSON.stringify(data, null, 2));
+      output('Data:', typeof data === 'string' ? data : JSON.stringify(data, null, 2));
     } else {
       output(logMessage);
     }
@@ -123,7 +124,7 @@ class MCPLogger {
    * @param {LogMeta} [meta] - Metadata
    */
   debug(message, data, meta) {
-    this.log("debug", message, data, meta);
+    this.log('debug', message, data, meta);
   }
 
   /**
@@ -133,7 +134,7 @@ class MCPLogger {
    * @param {LogMeta} [meta] - Metadata
    */
   info(message, data, meta) {
-    this.log("info", message, data, meta);
+    this.log('info', message, data, meta);
   }
 
   /**
@@ -143,7 +144,7 @@ class MCPLogger {
    * @param {LogMeta} [meta] - Metadata
    */
   warn(message, data, meta) {
-    this.log("warn", message, data, meta);
+    this.log('warn', message, data, meta);
   }
 
   /**
@@ -153,7 +154,7 @@ class MCPLogger {
    * @param {LogMeta} [meta] - Metadata
    */
   error(message, error, meta) {
-    this.log("error", message, error, meta);
+    this.log('error', message, error, meta);
   }
 
   /**
@@ -163,7 +164,7 @@ class MCPLogger {
    */
   startTimer(operation) {
     if (!this.performanceTracking) {
-      return () => { }; // No-op if performance tracking disabled
+      return () => {}; // No-op if performance tracking disabled
     }
 
     const startTime = Date.now();
@@ -261,7 +262,10 @@ class MCPLogger {
    * @param {string} [requestId] - Request ID
    */
   toolExecutionStart(toolName, args, requestId) {
-    this.debug(`Tool execution started: ${toolName}`, this.debugMode ? args : undefined, { toolName, requestId });
+    this.debug(`Tool execution started: ${toolName}`, this.debugMode ? args : undefined, {
+      toolName,
+      requestId,
+    });
   }
 
   /**
@@ -271,7 +275,11 @@ class MCPLogger {
    * @param {string} [requestId] - Request ID
    */
   toolExecutionEnd(toolName, duration, requestId) {
-    this.info(`Tool execution completed: ${toolName}`, undefined, { toolName, duration, requestId });
+    this.info(`Tool execution completed: ${toolName}`, undefined, {
+      toolName,
+      duration,
+      requestId,
+    });
   }
 
   /**

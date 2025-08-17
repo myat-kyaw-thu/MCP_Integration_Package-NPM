@@ -18,23 +18,25 @@
  * @throws {Error} If request is invalid
  */
 export function validateJsonRpcRequest(request) {
-  if (!request || typeof request !== "object") {
-    throw new Error("Request must be a JSON object");
+  if (!request || typeof request !== 'object') {
+    throw new Error('Request must be a JSON object');
   }
 
-  if (request.jsonrpc !== "2.0") {
+  if (request.jsonrpc !== '2.0') {
     throw new Error("Invalid JSON-RPC version. Must be '2.0'");
   }
 
-  if (!request.method || typeof request.method !== "string") {
+  if (!request.method || typeof request.method !== 'string') {
     throw new Error("Request must include a 'method' string");
   }
 
   // ID is optional for notifications, but if present must be string, number, or null
-  if (request.id !== undefined &&
-    typeof request.id !== "string" &&
-    typeof request.id !== "number" &&
-    request.id !== null) {
+  if (
+    request.id !== undefined &&
+    typeof request.id !== 'string' &&
+    typeof request.id !== 'number' &&
+    request.id !== null
+  ) {
     throw new Error("Request 'id' must be string, number, or null");
   }
 
@@ -52,8 +54,8 @@ export function validateToolArguments(args) {
     return {};
   }
 
-  if (typeof args !== "object" || Array.isArray(args)) {
-    throw new Error("Tool arguments must be an object");
+  if (typeof args !== 'object' || Array.isArray(args)) {
+    throw new Error('Tool arguments must be an object');
   }
 
   return args;
@@ -70,9 +72,9 @@ export function sanitizeErrorMessage(error) {
     return error.message;
   }
 
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return error;
   }
 
-  return "An unknown error occurred";
+  return 'An unknown error occurred';
 }

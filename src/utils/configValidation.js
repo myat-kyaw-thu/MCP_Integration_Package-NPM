@@ -82,21 +82,31 @@ export class ConfigValidator {
    * @param {any} config - Configuration to validate
    */
   validateBasicStructure(config) {
-    if (!config || typeof config !== "object") {
-      this.addError("config", "Configuration must be an object", config, "Use defineMCP({ ... })");
+    if (!config || typeof config !== 'object') {
+      this.addError('config', 'Configuration must be an object', config, 'Use defineMCP({ ... })');
       return;
     }
 
     if (Array.isArray(config)) {
-      this.addError("config", "Configuration cannot be an array", config, "Use defineMCP({ ... }) instead of [...]");
+      this.addError(
+        'config',
+        'Configuration cannot be an array',
+        config,
+        'Use defineMCP({ ... }) instead of [...]'
+      );
       return;
     }
 
     // Check for required fields
-    const requiredFields = ["name", "version", "tools"];
+    const requiredFields = ['name', 'version', 'tools'];
     for (const field of requiredFields) {
       if (!(field in config)) {
-        this.addError(field, `Required field "${field}" is missing`, undefined, `Add ${field}: "..."`);
+        this.addError(
+          field,
+          `Required field "${field}" is missing`,
+          undefined,
+          `Add ${field}: "..."`
+        );
       }
     }
   }
@@ -108,22 +118,27 @@ export class ConfigValidator {
   validateName(name) {
     if (name === undefined) return; // Already handled in basic structure
 
-    if (typeof name !== "string") {
-      this.addError("name", "Name must be a string", name, 'Use name: "My App"');
+    if (typeof name !== 'string') {
+      this.addError('name', 'Name must be a string', name, 'Use name: "My App"');
       return;
     }
 
-    if (name.trim() === "") {
-      this.addError("name", "Name cannot be empty", name, 'Use name: "My App"');
+    if (name.trim() === '') {
+      this.addError('name', 'Name cannot be empty', name, 'Use name: "My App"');
       return;
     }
 
     if (name.length > 100) {
-      this.addWarning("name", "Name is very long (>100 chars)", name, "Consider a shorter name");
+      this.addWarning('name', 'Name is very long (>100 chars)', name, 'Consider a shorter name');
     }
 
-    if (!/^[a-zA-Z0-9\s\-_\.]+$/.test(name)) {
-      this.addWarning("name", "Name contains special characters", name, "Use only letters, numbers, spaces, hyphens, underscores, and dots");
+    if (!/^[a-zA-Z0-9\s\-_.]+$/.test(name)) {
+      this.addWarning(
+        'name',
+        'Name contains special characters',
+        name,
+        'Use only letters, numbers, spaces, hyphens, underscores, and dots'
+      );
     }
   }
 
@@ -134,20 +149,25 @@ export class ConfigValidator {
   validateVersion(version) {
     if (version === undefined) return; // Already handled in basic structure
 
-    if (typeof version !== "string") {
-      this.addError("version", "Version must be a string", version, 'Use version: "1.0.0"');
+    if (typeof version !== 'string') {
+      this.addError('version', 'Version must be a string', version, 'Use version: "1.0.0"');
       return;
     }
 
-    if (version.trim() === "") {
-      this.addError("version", "Version cannot be empty", version, 'Use version: "1.0.0"');
+    if (version.trim() === '') {
+      this.addError('version', 'Version cannot be empty', version, 'Use version: "1.0.0"');
       return;
     }
 
     // Check for semantic versioning
-    const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9\-\.]+)?(\+[a-zA-Z0-9\-\.]+)?$/;
+    const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9\-._]+)?(\+[a-zA-Z0-9\-._]+)?$/;
     if (!semverRegex.test(version)) {
-      this.addWarning("version", "Version doesn't follow semantic versioning", version, 'Use format: "1.0.0"');
+      this.addWarning(
+        'version',
+        "Version doesn't follow semantic versioning",
+        version,
+        'Use format: "1.0.0"'
+      );
     }
   }
 
@@ -158,17 +178,25 @@ export class ConfigValidator {
   validateDescription(description) {
     if (description === undefined) return; // Optional field
 
-    if (typeof description !== "string") {
-      this.addError("description", "Description must be a string", description, 'Use description: "My app description"');
+    if (typeof description !== 'string') {
+      this.addError(
+        'description',
+        'Description must be a string',
+        description,
+        'Use description: "My app description"'
+      );
       return;
     }
 
     if (description.length > 500) {
-      this.addWarning("description", "Description is very long (>500 chars)", description, "Consider a shorter description");
+      this.addWarning(
+        'description',
+        'Description is very long (>500 chars)',
+        description,
+        'Consider a shorter description'
+      );
     }
   }
-
-
 
   /**
    * Validate tools array
@@ -178,17 +206,27 @@ export class ConfigValidator {
     if (tools === undefined) return; // Already handled in basic structure
 
     if (!Array.isArray(tools)) {
-      this.addError("tools", "Tools must be an array", tools, "Use tools: [...]");
+      this.addError('tools', 'Tools must be an array', tools, 'Use tools: [...]');
       return;
     }
 
     if (tools.length === 0) {
-      this.addError("tools", "At least one tool must be defined", tools, 'Add tools: [["myTool", handler]]');
+      this.addError(
+        'tools',
+        'At least one tool must be defined',
+        tools,
+        'Add tools: [["myTool", handler]]'
+      );
       return;
     }
 
     if (tools.length > 50) {
-      this.addWarning("tools", "Large number of tools (>50)", tools, "Consider grouping related functionality");
+      this.addWarning(
+        'tools',
+        'Large number of tools (>50)',
+        tools,
+        'Consider grouping related functionality'
+      );
     }
 
     // Validate each tool
@@ -210,14 +248,19 @@ export class ConfigValidator {
     if (Array.isArray(tool)) {
       // Tuple format: [name, handler]
       if (tool.length !== 2) {
-        this.addError(fieldPrefix, "Tuple format must have exactly 2 elements [name, handler]", tool, '["toolName", handlerFunction]');
+        this.addError(
+          fieldPrefix,
+          'Tuple format must have exactly 2 elements [name, handler]',
+          tool,
+          '["toolName", handlerFunction]'
+        );
         return;
       }
 
       const [name, handler] = tool;
       this.validateToolName(name, `${fieldPrefix}.name`, toolNames);
       this.validateToolHandler(handler, `${fieldPrefix}.handler`);
-    } else if (typeof tool === "object" && tool !== null) {
+    } else if (typeof tool === 'object' && tool !== null) {
       // Object format: { name, handler, description?, schema? }
       this.validateToolName(tool.name, `${fieldPrefix}.name`, toolNames);
       this.validateToolHandler(tool.handler, `${fieldPrefix}.handler`);
@@ -225,13 +268,23 @@ export class ConfigValidator {
       this.validateToolSchema(tool.schema, `${fieldPrefix}.schema`);
 
       // Check for unknown properties
-      const knownProps = ["name", "handler", "description", "schema"];
-      const unknownProps = Object.keys(tool).filter(prop => !knownProps.includes(prop));
+      const knownProps = ['name', 'handler', 'description', 'schema'];
+      const unknownProps = Object.keys(tool).filter((prop) => !knownProps.includes(prop));
       if (unknownProps.length > 0) {
-        this.addWarning(fieldPrefix, `Unknown properties: ${unknownProps.join(", ")}`, unknownProps, "Remove unknown properties");
+        this.addWarning(
+          fieldPrefix,
+          `Unknown properties: ${unknownProps.join(', ')}`,
+          unknownProps,
+          'Remove unknown properties'
+        );
       }
     } else {
-      this.addError(fieldPrefix, "Tool must be [name, handler] or {name, handler, ...}", tool, '["toolName", handler] or {name: "toolName", handler}');
+      this.addError(
+        fieldPrefix,
+        'Tool must be [name, handler] or {name, handler, ...}',
+        tool,
+        '["toolName", handler] or {name: "toolName", handler}'
+      );
     }
   }
 
@@ -242,30 +295,45 @@ export class ConfigValidator {
    * @param {Set<string>} toolNames - Set of existing tool names
    */
   validateToolName(name, fieldPath, toolNames) {
-    if (typeof name !== "string") {
-      this.addError(fieldPath, "Tool name must be a string", name, '"myToolName"');
+    if (typeof name !== 'string') {
+      this.addError(fieldPath, 'Tool name must be a string', name, '"myToolName"');
       return;
     }
 
-    if (name.trim() === "") {
-      this.addError(fieldPath, "Tool name cannot be empty", name, '"myToolName"');
+    if (name.trim() === '') {
+      this.addError(fieldPath, 'Tool name cannot be empty', name, '"myToolName"');
       return;
     }
 
     const trimmedName = name.trim();
     if (toolNames.has(trimmedName)) {
-      this.addError(fieldPath, `Duplicate tool name "${trimmedName}"`, name, "Each tool must have a unique name");
+      this.addError(
+        fieldPath,
+        `Duplicate tool name "${trimmedName}"`,
+        name,
+        'Each tool must have a unique name'
+      );
       return;
     }
     toolNames.add(trimmedName);
 
     // Validate name format
     if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(trimmedName)) {
-      this.addWarning(fieldPath, "Tool name should start with letter and contain only letters, numbers, underscores", name, '"myToolName" or "my_tool_name"');
+      this.addWarning(
+        fieldPath,
+        'Tool name should start with letter and contain only letters, numbers, underscores',
+        name,
+        '"myToolName" or "my_tool_name"'
+      );
     }
 
     if (trimmedName.length > 50) {
-      this.addWarning(fieldPath, "Tool name is very long (>50 chars)", name, "Consider a shorter name");
+      this.addWarning(
+        fieldPath,
+        'Tool name is very long (>50 chars)',
+        name,
+        'Consider a shorter name'
+      );
     }
   }
 
@@ -275,17 +343,27 @@ export class ConfigValidator {
    * @param {string} fieldPath - Field path for error reporting
    */
   validateToolHandler(handler, fieldPath) {
-    if (typeof handler !== "function") {
-      this.addError(fieldPath, "Tool handler must be a function", typeof handler, "async (args) => { ... }");
+    if (typeof handler !== 'function') {
+      this.addError(
+        fieldPath,
+        'Tool handler must be a function',
+        typeof handler,
+        'async (args) => { ... }'
+      );
       return;
     }
 
     // Check if it's an async function or returns a promise
-    const isAsync = handler.constructor.name === "AsyncFunction";
+    const isAsync = handler.constructor.name === 'AsyncFunction';
     const handlerString = handler.toString();
 
-    if (!isAsync && !handlerString.includes("Promise") && !handlerString.includes("await")) {
-      this.addWarning(fieldPath, "Consider making tool handler async", undefined, "async (args) => { ... }");
+    if (!isAsync && !handlerString.includes('Promise') && !handlerString.includes('await')) {
+      this.addWarning(
+        fieldPath,
+        'Consider making tool handler async',
+        undefined,
+        'async (args) => { ... }'
+      );
     }
   }
 
@@ -297,13 +375,23 @@ export class ConfigValidator {
   validateToolDescription(description, fieldPath) {
     if (description === undefined) return; // Optional
 
-    if (typeof description !== "string") {
-      this.addError(fieldPath, "Tool description must be a string", description, '"Description of what this tool does"');
+    if (typeof description !== 'string') {
+      this.addError(
+        fieldPath,
+        'Tool description must be a string',
+        description,
+        '"Description of what this tool does"'
+      );
       return;
     }
 
     if (description.length > 200) {
-      this.addWarning(fieldPath, "Tool description is very long (>200 chars)", description, "Consider a shorter description");
+      this.addWarning(
+        fieldPath,
+        'Tool description is very long (>200 chars)',
+        description,
+        'Consider a shorter description'
+      );
     }
   }
 
@@ -315,22 +403,40 @@ export class ConfigValidator {
   validateToolSchema(schema, fieldPath) {
     if (schema === undefined) return; // Optional
 
-    if (typeof schema !== "object" || schema === null || Array.isArray(schema)) {
-      this.addError(fieldPath, "Tool schema must be an object", schema, "{ type: 'object', properties: {...} }");
+    if (typeof schema !== 'object' || schema === null || Array.isArray(schema)) {
+      this.addError(
+        fieldPath,
+        'Tool schema must be an object',
+        schema,
+        "{ type: 'object', properties: {...} }"
+      );
       return;
     }
 
     // Basic JSON Schema validation
-    if (schema.type && typeof schema.type !== "string") {
-      this.addError(`${fieldPath}.type`, "Schema type must be a string", schema.type, '"object"');
+    if (schema.type && typeof schema.type !== 'string') {
+      this.addError(`${fieldPath}.type`, 'Schema type must be a string', schema.type, '"object"');
     }
 
-    if (schema.properties && (typeof schema.properties !== "object" || Array.isArray(schema.properties))) {
-      this.addError(`${fieldPath}.properties`, "Schema properties must be an object", schema.properties, "{ prop1: { type: 'string' } }");
+    if (
+      schema.properties &&
+      (typeof schema.properties !== 'object' || Array.isArray(schema.properties))
+    ) {
+      this.addError(
+        `${fieldPath}.properties`,
+        'Schema properties must be an object',
+        schema.properties,
+        "{ prop1: { type: 'string' } }"
+      );
     }
 
     if (schema.required && !Array.isArray(schema.required)) {
-      this.addError(`${fieldPath}.required`, "Schema required must be an array", schema.required, '["prop1", "prop2"]');
+      this.addError(
+        `${fieldPath}.required`,
+        'Schema required must be an array',
+        schema.required,
+        '["prop1", "prop2"]'
+      );
     }
   }
 }
@@ -354,7 +460,7 @@ export function formatValidationErrors(result) {
   const lines = [];
 
   if (result.errors.length > 0) {
-    lines.push("❌ Configuration Errors:");
+    lines.push('❌ Configuration Errors:');
     result.errors.forEach((error, index) => {
       lines.push(`  ${index + 1}. ${error.field}: ${error.message}`);
       if (error.value !== undefined) {
@@ -367,8 +473,8 @@ export function formatValidationErrors(result) {
   }
 
   if (result.warnings.length > 0) {
-    if (lines.length > 0) lines.push("");
-    lines.push("⚠️  Configuration Warnings:");
+    if (lines.length > 0) lines.push('');
+    lines.push('⚠️  Configuration Warnings:');
     result.warnings.forEach((warning, index) => {
       lines.push(`  ${index + 1}. ${warning.field}: ${warning.message}`);
       if (warning.suggestion) {
@@ -377,5 +483,5 @@ export function formatValidationErrors(result) {
     });
   }
 
-  return lines.join("\n");
+  return lines.join('\n');
 }

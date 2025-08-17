@@ -1,6 +1,6 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from '../utils/logger.js';
 import { sanitizeErrorMessage, validateToolArguments } from '../utils/validation.js';
 
@@ -38,7 +38,7 @@ export class MCPConnectServer {
         capabilities: {
           tools: {},
         },
-      },
+      }
     );
 
     this.setupHandlers();
@@ -60,23 +60,23 @@ export class MCPConnectServer {
       logger.serverShutdown(signal);
       try {
         // Give ongoing operations a chance to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         process.exit(0);
       } catch (error) {
-        logger.error("Error during shutdown", error);
+        logger.error('Error during shutdown', error);
         process.exit(1);
       }
     };
 
-    process.on("SIGINT", () => shutdown("SIGINT"));
-    process.on("SIGTERM", () => shutdown("SIGTERM"));
-    process.on("uncaughtException", (error) => {
-      logger.error("Uncaught exception", error);
-      shutdown("uncaughtException");
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('uncaughtException', (error) => {
+      logger.error('Uncaught exception', error);
+      shutdown('uncaughtException');
     });
-    process.on("unhandledRejection", (reason) => {
-      logger.error("Unhandled rejection", reason);
-      shutdown("unhandledRejection");
+    process.on('unhandledRejection', (reason) => {
+      logger.error('Unhandled rejection', reason);
+      shutdown('unhandledRejection');
     });
   }
 
@@ -118,7 +118,7 @@ export class MCPConnectServer {
       const requestId = Math.random().toString(36).substring(2, 8);
 
       if (this.isShuttingDown) {
-        throw new Error("Server is shutting down");
+        throw new Error('Server is shutting down');
       }
 
       // Simple rate limiting protection
@@ -127,8 +127,10 @@ export class MCPConnectServer {
       const currentCount = this.requestCounts.get(requestKey) || 0;
 
       if (currentCount >= this.maxRequestsPerMinute) {
-        const error = new Error(`Rate limit exceeded: ${this.maxRequestsPerMinute} requests per minute`);
-        logger.traceError("tools/call", error, requestId);
+        const error = new Error(
+          `Rate limit exceeded: ${this.maxRequestsPerMinute} requests per minute`
+        );
+        logger.traceError('tools/call', error, requestId);
         throw error;
       }
 
@@ -144,19 +146,21 @@ export class MCPConnectServer {
       const { name, arguments: args } = request.params;
 
       // Log incoming request
-      logger.traceRequest("tools/call", { name, args }, requestId);
+      logger.traceRequest('tools/call', { name, args }, requestId);
 
       // Validate request
-      if (!name || typeof name !== "string") {
-        const error = new Error("Tool name is required and must be a string");
-        logger.traceError("tools/call", error, requestId);
+      if (!name || typeof name !== 'string') {
+        const error = new Error('Tool name is required and must be a string');
+        logger.traceError('tools/call', error, requestId);
         throw error;
       }
 
       const tool = this.config.tools.find((t) => t.name === name);
       if (!tool) {
-        const error = new Error(`Tool "${name}" not found. Available tools: ${this.config.tools.map(t => t.name).join(", ")}`);
-        logger.traceError("tools/call", error, requestId);
+        const error = new Error(
+          `Tool "${name}" not found. Available tools: ${this.config.tools.map((t) => t.name).join(', ')}`
+        );
+        logger.traceError('tools/call', error, requestId);
         throw error;
       }
 
@@ -179,24 +183,28 @@ export class MCPConnectServer {
         let content;
         const MAX_RESPONSE_SIZE = 1024 * 1024; // 1MB limit
 
-        if (typeof result === "string") {
+        if (typeof result === 'string') {
           content = result;
         } else if (result === null || result === undefined) {
-          content = "null";
+          content = 'null';
         } else {
           try {
             // Handle circular references and large objects
-            const jsonString = JSON.stringify(result, (key, value) => {
-              // Handle circular references
-              if (typeof value === 'object' && value !== null) {
-                if (this.seenObjects && this.seenObjects.has(value)) {
-                  return '[Circular Reference]';
+            const jsonString = JSON.stringify(
+              result,
+              (key, value) => {
+                // Handle circular references
+                if (typeof value === 'object' && value !== null) {
+                  if (this.seenObjects && this.seenObjects.has(value)) {
+                    return '[Circular Reference]';
+                  }
+                  if (!this.seenObjects) this.seenObjects = new WeakSet();
+                  this.seenObjects.add(value);
                 }
-                if (!this.seenObjects) this.seenObjects = new WeakSet();
-                this.seenObjects.add(value);
-              }
-              return value;
-            }, 2);
+                return value;
+              },
+              2
+            );
 
             // Reset circular reference tracker
             this.seenObjects = null;
@@ -214,18 +222,18 @@ export class MCPConnectServer {
           content = truncated + '\n\n[Response truncated - exceeded 1MB limit]';
           logger.warn(`Tool "${name}" response truncated`, {
             originalSize: content.length,
-            truncatedSize: MAX_RESPONSE_SIZE
+            truncatedSize: MAX_RESPONSE_SIZE,
           });
         }
 
         const duration = Date.now() - startTime;
         logger.toolExecutionEnd(name, duration, requestId);
-        logger.traceResponse("tools/call", { content }, requestId);
+        logger.traceResponse('tools/call', { content }, requestId);
 
         return {
           content: [
             {
-              type: "text",
+              type: 'text',
               text: content,
             },
           ],
@@ -233,7 +241,7 @@ export class MCPConnectServer {
       } catch (error) {
         const duration = Date.now() - startTime;
         logger.toolExecutionError(name, error, duration, requestId);
-        logger.traceError("tools/call", error, requestId);
+        logger.traceError('tools/call', error, requestId);
 
         // Return MCP-compliant error with sanitized message
         const sanitizedMessage = sanitizeErrorMessage(error);
@@ -254,27 +262,27 @@ export class MCPConnectServer {
       // Enhanced error handling for transport
       transport.onclose = () => {
         if (!this.isShuttingDown) {
-          logger.warn("STDIO transport closed unexpectedly - AI client may have disconnected");
-          logger.info("This is normal when Claude Desktop or other MCP clients disconnect");
+          logger.warn('STDIO transport closed unexpectedly - AI client may have disconnected');
+          logger.info('This is normal when Claude Desktop or other MCP clients disconnect');
         }
       };
 
       transport.onerror = (error) => {
-        logger.error("STDIO transport error", error);
+        logger.error('STDIO transport error', error);
 
         // Provide helpful guidance for common transport errors
         if (error && typeof error === 'object') {
           const errorStr = error.toString();
 
           if (errorStr.includes('EPIPE') || errorStr.includes('broken pipe')) {
-            logger.error("Broken pipe - AI client disconnected abruptly");
-            logger.info("Restart the MCP server and reconnect your AI client");
+            logger.error('Broken pipe - AI client disconnected abruptly');
+            logger.info('Restart the MCP server and reconnect your AI client');
           } else if (errorStr.includes('ECONNRESET')) {
-            logger.error("Connection reset - AI client closed connection");
-            logger.info("This is normal during AI client restart");
+            logger.error('Connection reset - AI client closed connection');
+            logger.info('This is normal during AI client restart');
           } else if (errorStr.includes('parse') || errorStr.includes('JSON')) {
-            logger.error("JSON parsing error - malformed message received");
-            logger.info("Check AI client MCP implementation");
+            logger.error('JSON parsing error - malformed message received');
+            logger.info('Check AI client MCP implementation');
           }
         }
       };
@@ -282,42 +290,42 @@ export class MCPConnectServer {
       // Handle process stdio errors
       process.stdin.on('error', (error) => {
         if (!this.isShuttingDown) {
-          logger.error("STDIN error", error);
-          logger.info("STDIN pipe broken - AI client may have disconnected");
+          logger.error('STDIN error', error);
+          logger.info('STDIN pipe broken - AI client may have disconnected');
         }
       });
 
       process.stdout.on('error', (error) => {
         if (!this.isShuttingDown) {
-          logger.error("STDOUT error", error);
-          logger.info("STDOUT pipe broken - cannot send responses to AI client");
+          logger.error('STDOUT error', error);
+          logger.info('STDOUT pipe broken - cannot send responses to AI client');
         }
       });
 
       await this.server.connect(transport);
-      logger.serverStarted(this.config.name, "STDIO", this.config.tools.length);
+      logger.serverStarted(this.config.name, 'STDIO', this.config.tools.length);
     } catch (error) {
-      logger.error("Failed to start MCP server", error);
+      logger.error('Failed to start MCP server', error);
 
       // Enhanced error guidance
       if (error instanceof Error) {
         const errorMsg = error.message;
 
-        if (errorMsg.includes("EACCES")) {
-          logger.error("❌ Permission denied");
-          logger.info("💡 Try running with elevated permissions or check file/directory access");
-        } else if (errorMsg.includes("ENOENT")) {
-          logger.error("❌ File or directory not found");
-          logger.info("💡 Check your configuration file path and working directory");
-        } else if (errorMsg.includes("EADDRINUSE")) {
-          logger.error("❌ Address already in use");
-          logger.info("💡 Another MCP server may be running. Stop it first");
-        } else if (errorMsg.includes("MODULE_NOT_FOUND")) {
-          logger.error("❌ Module not found");
-          logger.info("💡 Run: npm install @myatkyawthu/mcp-connect");
-        } else if (errorMsg.includes("Cannot resolve")) {
-          logger.error("❌ Import resolution failed");
-          logger.info("💡 Check your import paths in mcp.config.js");
+        if (errorMsg.includes('EACCES')) {
+          logger.error('❌ Permission denied');
+          logger.info('💡 Try running with elevated permissions or check file/directory access');
+        } else if (errorMsg.includes('ENOENT')) {
+          logger.error('❌ File or directory not found');
+          logger.info('💡 Check your configuration file path and working directory');
+        } else if (errorMsg.includes('EADDRINUSE')) {
+          logger.error('❌ Address already in use');
+          logger.info('💡 Another MCP server may be running. Stop it first');
+        } else if (errorMsg.includes('MODULE_NOT_FOUND')) {
+          logger.error('❌ Module not found');
+          logger.info('💡 Run: npm install @myatkyawthu/mcp-connect');
+        } else if (errorMsg.includes('Cannot resolve')) {
+          logger.error('❌ Import resolution failed');
+          logger.info('💡 Check your import paths in mcp.config.js');
         }
       }
 
@@ -332,6 +340,6 @@ export class MCPConnectServer {
   async stop() {
     this.isShuttingDown = true;
     // STDIO transport doesn't need explicit stopping
-    logger.info("MCP server stopped");
+    logger.info('MCP server stopped');
   }
 }

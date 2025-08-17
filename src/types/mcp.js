@@ -35,10 +35,10 @@
 /**
  * Tool definition - supports both tuple and object formats
  * @typedef {[string, ToolFunction]|{name: string, handler: ToolFunction, description?: string, schema?: Record<string, any>}} ToolDefinition
- * 
+ *
  * Tuple format: [name, handler]
  * @example ['hello', async (args) => `Hello ${args.name}!`]
- * 
+ *
  * Object format: {name, handler, description?, schema?}
  * @example {
  *   name: 'hello',
@@ -91,9 +91,7 @@ export function isValidToolDefinition(toolDef) {
   if (Array.isArray(toolDef)) {
     // Tuple format: [name, handler]
     return (
-      toolDef.length === 2 &&
-      typeof toolDef[0] === 'string' &&
-      typeof toolDef[1] === 'function'
+      toolDef.length === 2 && typeof toolDef[0] === 'string' && typeof toolDef[1] === 'function'
     );
   } else if (toolDef && typeof toolDef === 'object') {
     // Object format: {name, handler, description?, schema?}
@@ -101,7 +99,8 @@ export function isValidToolDefinition(toolDef) {
       typeof toolDef.name === 'string' &&
       typeof toolDef.handler === 'function' &&
       (toolDef.description === undefined || typeof toolDef.description === 'string') &&
-      (toolDef.schema === undefined || (typeof toolDef.schema === 'object' && toolDef.schema !== null))
+      (toolDef.schema === undefined ||
+        (typeof toolDef.schema === 'object' && toolDef.schema !== null))
     );
   }
   return false;
