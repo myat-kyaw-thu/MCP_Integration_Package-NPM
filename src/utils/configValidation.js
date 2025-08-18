@@ -215,7 +215,7 @@ export class ConfigValidator {
         'tools',
         'At least one tool must be defined',
         tools,
-        'Add tools: [["myTool", handler]]'
+        'Add tools: [["myTool", handler]] or run "mcp-connect init" for examples'
       );
       return;
     }
@@ -229,11 +229,31 @@ export class ConfigValidator {
       );
     }
 
-    // Validate each tool
+    // Validate each tool and check for consistency
     const toolNames = new Set();
+    const asyncPatterns = [];
+
     tools.forEach((tool, index) => {
       this.validateTool(tool, index, toolNames);
+
+      // Track async patterns for consistency checking
+      let handler;
+      if (Array.isArray(tool) && tool.length === 2) {
+        handler = tool[1];
+      } else if (tool && typeof tool === 'object' && tool.handler) {
+        handler = tool.handler;
+      }
+
+      if (typeof handler === 'function') {
+        const isAsync = handler.constructor.name === 'AsyncFunction';
+        const handlerString = handler.toString();
+        const hasPromise = handlerString.includes('Promise') || handlerString.includes('await');
+        asyncPatterns.push({ index, isAsync: isAsync || hasPromise });
+      }
     });
+
+    // Check for async/sync mixing
+    this.validateAsyncConsistency(asyncPatterns);
   }
 
   /**
@@ -353,16 +373,45 @@ export class ConfigValidator {
       return;
     }
 
+    // Validate function signature
+    const handlerString = handler.toString();
+
+    // Check parameter count (should accept 0 or 1 parameter)
+    const paramMatch = handlerString.match(/^(?:async\s+)?(?:function\s*)?(?:\w+\s*)?\(([^)]*)\)/);
+    if (paramMatch) {
+      const params = paramMatch[1].trim();
+      if (params) {
+        const paramCount = params.split(',').filter(p => p.trim()).length;
+        if (paramCount > 1) {
+          this.addError(
+            fieldPath,
+            `Tool handler should accept 0 or 1 parameter, got ${paramCount}`,
+            paramCount,
+            'Use: async (args) => { ... } or async () => { ... }'
+          );
+        }
+      }
+    }
+
     // Check if it's an async function or returns a promise
     const isAsync = handler.constructor.name === 'AsyncFunction';
-    const handlerString = handler.toString();
 
     if (!isAsync && !handlerString.includes('Promise') && !handlerString.includes('await')) {
       this.addWarning(
         fieldPath,
-        'Consider making tool handler async',
+        'Consider making tool handler async for better performance',
         undefined,
         'async (args) => { ... }'
+      );
+    }
+
+    // Check for common mistakes
+    if (handlerString.includes('callback') || handlerString.includes('cb')) {
+      this.addWarning(
+        fieldPath,
+        'Tool handler appears to use callbacks - use async/await instead',
+        undefined,
+        'Replace callbacks with: async (args) => { return await someAsyncOperation(); }'
       );
     }
   }
@@ -391,6 +440,38 @@ export class ConfigValidator {
         'Tool description is very long (>200 chars)',
         description,
         'Consider a shorter description'
+      );
+    }
+  }
+
+  /**
+   * Validate async/sync consistency across tools
+   * @param {Array<{index: number, isAsync: boolean}>} asyncPatterns - Async patterns for each tool
+   */
+  validateAsyncConsistency(asyncPatterns) {
+    if (asyncPatterns.length < 2) return; // No consistency issues with single tool
+
+    const asyncCount = asyncPatterns.filter(p => p.isAsync).length;
+    const syncCount = asyncPatterns.length - asyncCount;
+
+    // If mixing async and sync, warn about it
+    if (asyncCount > 0 && syncCount > 0) {
+      const syncIndexes = asyncPatterns.filter(p => !p.isAsync).map(p => p.index);
+      this.addWarning(
+        'tools',
+        `Mixing async and sync tools may cause inconsistent behavior. Tools at indexes [${syncIndexes.join(', ')}] are synchronous`,
+        { asyncCount, syncCount },
+        'Consider making all tools async for consistency: async (args) => { ... }'
+      );
+    }
+
+    // If mostly async but some sync, suggest converting
+    if (asyncCount > syncCount && syncCount > 0) {
+      this.addWarning(
+        'tools',
+        'Most tools are async - consider converting remaining sync tools to async',
+        undefined,
+        'Use: async (args) => { return syncResult; } for sync operations'
       );
     }
   }
