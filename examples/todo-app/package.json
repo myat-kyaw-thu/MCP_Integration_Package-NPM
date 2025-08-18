@@ -11,6 +11,6 @@
     "dev": "node ../../src/cli.js"
   },
   "dependencies": {
-    "mcp-connect": "^0.1.1"
+    "@myatkyawthu/mcp-connect": "^0.2.0"
   }
 }
