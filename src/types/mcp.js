@@ -35,17 +35,6 @@
 /**
  * Tool definition - supports both tuple and object formats
  * @typedef {[string, ToolFunction]|{name: string, handler: ToolFunction, description?: string, schema?: Record<string, any>}} ToolDefinition
- *
- * Tuple format: [name, handler]
- * @example ['hello', async (args) => `Hello ${args.name}!`]
- *
- * Object format: {name, handler, description?, schema?}
- * @example {
- *   name: 'hello',
- *   handler: async (args) => `Hello ${args.name}!`,
- *   description: 'Greet a user',
- *   schema: { type: 'object', properties: { name: { type: 'string' } } }
- * }
  */
 
 // Runtime validation functions for type checking

@@ -1,5 +1,5 @@
 /**
- * Comprehensive configuration validation for MCP-Connect
+ * Configuration validation for MCP-Connect
  */
 
 /**

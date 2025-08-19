@@ -9,7 +9,6 @@ const DEFAULT_TOOL_TIMEOUT = 30000;
 
 /**
  * MCP Connect Server class
- * Handles MCP protocol communication and tool execution
  */
 export class MCPConnectServer {
   /**

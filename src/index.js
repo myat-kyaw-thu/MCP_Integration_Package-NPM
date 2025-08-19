@@ -1,20 +1,5 @@
 /**
- * MCP-Connect - Dead simple MCP (Model Context Protocol) server for exposing your app functions to AI agents
- *
- * Main entry point - exports public API
- *
- * @example
- * ```javascript
- * import { defineMCP } from 'mcp-connect';
- *
- * export default defineMCP({
- *   name: 'My App',
- *   version: '1.0.0',
- *   tools: [
- *     ['hello', async ({ name }) => `Hello ${name}!`]
- *   ]
- * });
- * ```
+ * MCP-Connect main entry point
  */
 
 // Main API exports
