@@ -5,9 +5,6 @@ import { resolve } from 'path';
 import { defineMCP } from './defineMCP.js';
 import { MCPConnectServer } from './server/mcpServer.js';
 
-/**
- * Handle init command - create sample config file
- */
 async function handleInitCommand() {
   const configPath = resolve(process.cwd(), 'mcp.config.js');
 
@@ -68,13 +65,8 @@ export default defineMCP({
   }
 }
 
-/**
- * CLI entry point for mcp-connect
- * Uses MCP SDK with STDIO transport or Express.js for HTTP transport
- */
 async function main() {
   try {
-    // Handle init command
     if (process.argv[2] === 'init') {
       await handleInitCommand();
       return;
@@ -82,13 +74,10 @@ async function main() {
 
     console.error('Starting MCP-Connect CLI...');
 
-    // Check if config file path is provided as argument
     const configArg = process.argv[2];
-    /** @type {string|null} */
     let configPath = null;
 
     if (configArg) {
-      // Config file path provided as argument
       const fullPath = resolve(configArg);
       if (existsSync(fullPath)) {
         configPath = fullPath;
@@ -97,7 +86,6 @@ async function main() {
         process.exit(1);
       }
     } else {
-      // Look for config file in current directory (prioritize .js and .mjs)
       const configPaths = ['mcp.config.js', 'mcp.config.mjs', 'mcp.config.ts'];
 
       for (const path of configPaths) {
@@ -134,7 +122,6 @@ export default defineMCP({
 
     let configModule;
     try {
-      // Handle TypeScript config files
       if (configPath.endsWith('.ts')) {
         console.error('TypeScript config detected. For Node.js compatibility:');
         console.error('1. Rename mcp.config.ts to mcp.config.js and convert to JavaScript');
@@ -157,7 +144,6 @@ export default defineMCP({
         process.exit(1);
       }
 
-      // Import config file using Node.js ES modules
       const fileUrl = configPath.startsWith('/')
         ? `file://${configPath}`
         : `file:///${configPath.replace(/\\/g, '/')}`;
@@ -190,7 +176,6 @@ export default defineMCP({
       process.exit(1);
     }
 
-    // Validate config using defineMCP (in case user didn't use it)
     let validatedConfig;
     try {
       validatedConfig = typeof config === 'function' ? config : defineMCP(config);
@@ -199,11 +184,9 @@ export default defineMCP({
       process.exit(1);
     }
 
-    // Create and start MCP server
     const server = new MCPConnectServer(validatedConfig);
     await server.start();
 
-    // Handle graceful shutdown
     process.on('SIGINT', async () => {
       console.error('Shutting down...');
       try {
@@ -229,8 +212,6 @@ export default defineMCP({
   }
 }
 
-// Run CLI if this file is executed directly
-// Multiple checks to ensure main() runs when CLI is executed
 const isMainModule =
   process.argv[1] &&
   (import.meta.url === `file://${process.argv[1]}` ||
