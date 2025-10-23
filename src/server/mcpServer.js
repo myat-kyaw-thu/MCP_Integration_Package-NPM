@@ -4,30 +4,15 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { logger } from '../utils/logger.js';
 import { sanitizeErrorMessage, validateToolArguments } from '../utils/validation.js';
 
-// Default timeout for tool execution (30 seconds)
 const DEFAULT_TOOL_TIMEOUT = 30000;
 
-/**
- * MCP Connect Server class
- * Handles MCP protocol communication and tool execution
- */
 export class MCPConnectServer {
-  /**
-   * Create MCP Connect Server
-   * @param {import('../types/mcp.js').MCPConfig} config - MCP configuration
-   */
   constructor(config) {
-    /** @type {import('../types/mcp.js').MCPConfig} */
     this.config = config;
-    /** @type {boolean} */
     this.isShuttingDown = false;
-    /** @type {Map<string, number>} */
     this.requestCounts = new Map();
-    /** @type {number} */
-    this.maxRequestsPerMinute = 100; // Simple rate limiting
+    this.maxRequestsPerMinute = 100;
 
-    // Create MCP SDK server for STDIO transport
-    /** @type {Server} */
     this.server = new Server(
       {
         name: config.name,
@@ -45,21 +30,13 @@ export class MCPConnectServer {
     this.setupGracefulShutdown();
   }
 
-  /**
-   * Set up graceful shutdown handlers
-   */
   setupGracefulShutdown() {
-    /**
-     * Shutdown handler
-     * @param {string} signal - Shutdown signal
-     */
     const shutdown = async (signal) => {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
 
       logger.serverShutdown(signal);
       try {
-        // Give ongoing operations a chance to complete
         await new Promise((resolve) => setTimeout(resolve, 1000));
         process.exit(0);
       } catch (error) {
@@ -80,14 +57,6 @@ export class MCPConnectServer {
     });
   }
 
-  /**
-   * Execute promise with timeout
-   * @template T
-   * @param {Promise<T>} promise - Promise to execute
-   * @param {number} timeoutMs - Timeout in milliseconds
-   * @param {string} operation - Operation name for error messages
-   * @returns {Promise<T>} Promise that resolves or rejects with timeout
-   */
   async withTimeout(promise, timeoutMs, operation) {
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
@@ -98,11 +67,7 @@ export class MCPConnectServer {
     return Promise.race([promise, timeoutPromise]);
   }
 
-  /**
-   * Set up MCP request handlers
-   */
   setupHandlers() {
-    // List available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: this.config.tools.map((tool) => ({
@@ -113,7 +78,6 @@ export class MCPConnectServer {
       };
     });
 
-    // Execute tool calls with proper error handling and timeout
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const requestId = Math.random().toString(36).substring(2, 8);
 
@@ -121,7 +85,6 @@ export class MCPConnectServer {
         throw new Error('Server is shutting down');
       }
 
-      // Simple rate limiting protection
       const currentMinute = Math.floor(Date.now() / 60000);
       const requestKey = `${currentMinute}`;
       const currentCount = this.requestCounts.get(requestKey) || 0;
@@ -136,7 +99,6 @@ export class MCPConnectServer {
 
       this.requestCounts.set(requestKey, currentCount + 1);
 
-      // Clean up old request counts (keep only current and previous minute)
       for (const [key] of this.requestCounts) {
         if (parseInt(key) < currentMinute - 1) {
           this.requestCounts.delete(key);
@@ -145,10 +107,8 @@ export class MCPConnectServer {
 
       const { name, arguments: args } = request.params;
 
-      // Log incoming request
       logger.traceRequest('tools/call', { name, args }, requestId);
 
-      // Validate request
       if (!name || typeof name !== 'string') {
         const error = new Error('Tool name is required and must be a string');
         logger.traceError('tools/call', error, requestId);
@@ -168,10 +128,8 @@ export class MCPConnectServer {
       logger.toolExecutionStart(name, args, requestId);
 
       try {
-        // Validate and sanitize arguments
         const validatedArgs = validateToolArguments(args);
 
-        // Execute tool with timeout and performance tracking
         const toolPromise = Promise.resolve(tool.handler(validatedArgs));
         const result = await logger.timeAsync(
           `Tool "${name}" execution`,
@@ -179,9 +137,8 @@ export class MCPConnectServer {
           name
         );
 
-        // Handle different result types with size limits
         let content;
-        const MAX_RESPONSE_SIZE = 1024 * 1024; // 1MB limit
+        const MAX_RESPONSE_SIZE = 1024 * 1024;
 
         if (typeof result === 'string') {
           content = result;
@@ -189,24 +146,17 @@ export class MCPConnectServer {
           content = 'null';
         } else {
           try {
-            // Handle circular references and large objects
-            const jsonString = JSON.stringify(
-              result,
-              (key, value) => {
-                // Handle circular references
-                if (typeof value === 'object' && value !== null) {
-                  if (this.seenObjects && this.seenObjects.has(value)) {
-                    return '[Circular Reference]';
-                  }
-                  if (!this.seenObjects) this.seenObjects = new WeakSet();
-                  this.seenObjects.add(value);
+            const jsonString = JSON.stringify(result, (key, value) => {
+              if (typeof value === 'object' && value !== null) {
+                if (this.seenObjects && this.seenObjects.has(value)) {
+                  return '[Circular Reference]';
                 }
-                return value;
-              },
-              2
-            );
+                if (!this.seenObjects) this.seenObjects = new WeakSet();
+                this.seenObjects.add(value);
+              }
+              return value;
+            }, 2);
 
-            // Reset circular reference tracker
             this.seenObjects = null;
 
             content = jsonString;
@@ -216,7 +166,6 @@ export class MCPConnectServer {
           }
         }
 
-        // Check response size and truncate if necessary
         if (content.length > MAX_RESPONSE_SIZE) {
           const truncated = content.substring(0, MAX_RESPONSE_SIZE - 100);
           content = truncated + '\n\n[Response truncated - exceeded 1MB limit]';
@@ -243,23 +192,16 @@ export class MCPConnectServer {
         logger.toolExecutionError(name, error, duration, requestId);
         logger.traceError('tools/call', error, requestId);
 
-        // Return MCP-compliant error with sanitized message
         const sanitizedMessage = sanitizeErrorMessage(error);
         throw new Error(`Tool "${name}" failed: ${sanitizedMessage}`);
       }
     });
   }
 
-  /**
-   * Start the MCP server with STDIO transport
-   * @returns {Promise<void>} Promise that resolves when server starts
-   * @throws {Error} If server fails to start
-   */
   async start() {
     try {
       const transport = new StdioServerTransport();
 
-      // Enhanced error handling for transport
       transport.onclose = () => {
         if (!this.isShuttingDown) {
           logger.warn('STDIO transport closed unexpectedly - AI client may have disconnected');
@@ -270,7 +212,6 @@ export class MCPConnectServer {
       transport.onerror = (error) => {
         logger.error('STDIO transport error', error);
 
-        // Provide helpful guidance for common transport errors
         if (error && typeof error === 'object') {
           const errorStr = error.toString();
 
@@ -287,7 +228,6 @@ export class MCPConnectServer {
         }
       };
 
-      // Handle process stdio errors
       process.stdin.on('error', (error) => {
         if (!this.isShuttingDown) {
           logger.error('STDIN error', error);
@@ -307,7 +247,6 @@ export class MCPConnectServer {
     } catch (error) {
       logger.error('Failed to start MCP server', error);
 
-      // Enhanced error guidance
       if (error instanceof Error) {
         const errorMsg = error.message;
 
@@ -333,13 +272,8 @@ export class MCPConnectServer {
     }
   }
 
-  /**
-   * Stop the MCP server
-   * @returns {Promise<void>} Promise that resolves when server stops
-   */
   async stop() {
     this.isShuttingDown = true;
-    // STDIO transport doesn't need explicit stopping
     logger.info('MCP server stopped');
   }
 }
