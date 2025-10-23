@@ -1,22 +1,3 @@
-/**
- * Validation utilities for MCP-Connect
- */
-
-/**
- * @typedef {Object} JsonRpcRequest
- * @property {string} jsonrpc - JSON-RPC version
- * @property {string} method - Method name
- * @property {any} [params] - Method parameters
- * @property {string|number|null} [id] - Request ID
- */
-
-/**
- * Basic JSON-RPC request validation
- * The MCP SDK handles most validation, but this provides additional safety
- * @param {any} request - Request to validate
- * @returns {JsonRpcRequest} Validated request
- * @throws {Error} If request is invalid
- */
 export function validateJsonRpcRequest(request) {
   if (!request || typeof request !== 'object') {
     throw new Error('Request must be a JSON object');
@@ -40,15 +21,9 @@ export function validateJsonRpcRequest(request) {
     throw new Error("Request 'id' must be string, number, or null");
   }
 
-  return /** @type {JsonRpcRequest} */ (request);
+  return request;
 }
 
-/**
- * Validate tool arguments
- * @param {any} args - Arguments to validate
- * @returns {Record<string, any>} Validated arguments object
- * @throws {Error} If arguments are invalid
- */
 export function validateToolArguments(args) {
   if (args === null || args === undefined) {
     return {};
@@ -61,11 +36,6 @@ export function validateToolArguments(args) {
   return args;
 }
 
-/**
- * Sanitize error messages for client consumption
- * @param {unknown} error - Error to sanitize
- * @returns {string} Sanitized error message
- */
 export function sanitizeErrorMessage(error) {
   if (error instanceof Error) {
     // Remove sensitive information from stack traces
