@@ -4,11 +4,11 @@ export function validateJsonRpcRequest(request) {
   }
 
   if (request.jsonrpc !== '2.0') {
-    throw new Error("Invalid JSON-RPC version. Must be '2.0'");
+    throw new Error('Invalid JSON-RPC version. Must be \'2.0\'');
   }
 
   if (!request.method || typeof request.method !== 'string') {
-    throw new Error("Request must include a 'method' string");
+    throw new Error('Request must include a \'method\' string');
   }
 
   // ID is optional for notifications, but if present must be string, number, or null
@@ -18,7 +18,7 @@ export function validateJsonRpcRequest(request) {
     typeof request.id !== 'number' &&
     request.id !== null
   ) {
-    throw new Error("Request 'id' must be string, number, or null");
+    throw new Error('Request \'id\' must be string, number, or null');
   }
 
   return request;

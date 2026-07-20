@@ -105,7 +105,7 @@ export class ConfigValidator {
     if (!semverRegex.test(version)) {
       this.addWarning(
         'version',
-        "Version doesn't follow semantic versioning",
+        'Version doesn\'t follow semantic versioning',
         version,
         'Use format: "1.0.0"'
       );
@@ -380,7 +380,7 @@ export class ConfigValidator {
         fieldPath,
         'Tool schema must be an object',
         schema,
-        "{ type: 'object', properties: {...} }"
+        '{ type: \'object\', properties: {...} }'
       );
       return;
     }
@@ -397,7 +397,7 @@ export class ConfigValidator {
         `${fieldPath}.properties`,
         'Schema properties must be an object',
         schema.properties,
-        "{ prop1: { type: 'string' } }"
+        '{ prop1: { type: \'string\' } }'
       );
     }
 

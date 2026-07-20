@@ -33,7 +33,7 @@ export function defineMCP(config) {
         handler,
       };
     } else {
-      const { name, handler, description, schema } = tool;
+      const { name, handler, description, schema, confirm } = tool;
       return {
         name: name.trim(),
         description: description || `Tool: ${name}`,
@@ -43,6 +43,7 @@ export function defineMCP(config) {
           additionalProperties: true,
         },
         handler,
+        confirm: !!confirm,
       };
     }
   });
@@ -51,6 +52,7 @@ export function defineMCP(config) {
     name: config.name,
     version: config.version,
     description: config.description,
+    server: config.server || {},
     tools: mcpTools,
   };
 }

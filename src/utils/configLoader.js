@@ -32,7 +32,7 @@ export async function loadConfig(configPath = null) {
 
   if (!resolvedConfigPath) {
     throw new Error(
-      `No mcp.config.js found in current directory\nSuggestion: Run 'mcp-connect init' to create a config file`
+      'No mcp.config.js found in current directory\nSuggestion: Run \'mcp-connect init\' to create a config file'
     );
   }
 
@@ -62,11 +62,11 @@ export async function loadConfig(configPath = null) {
       error.message.includes('Cannot resolve') ||
       error.message.includes('MODULE_NOT_FOUND')
     ) {
-      errorMessage += `\nMake sure 'mcp-connect' is installed: npm install mcp-connect`;
+      errorMessage += '\nMake sure \'mcp-connect\' is installed: npm install mcp-connect';
     } else if (error.message.includes('SyntaxError')) {
-      errorMessage += `\nConfig file has syntax errors. Check your JavaScript syntax.`;
+      errorMessage += '\nConfig file has syntax errors. Check your JavaScript syntax.';
     } else if (error.message.includes('ERR_MODULE_NOT_FOUND')) {
-      errorMessage += `\nModule import error. Check your import paths in the config file.`;
+      errorMessage += '\nModule import error. Check your import paths in the config file.';
     }
 
     throw new Error(errorMessage);
@@ -76,7 +76,7 @@ export async function loadConfig(configPath = null) {
 
   if (!config) {
     throw new Error(
-      `Config file must export a default configuration\nMake sure your config has: export default defineMCP({...})`
+      'Config file must export a default configuration\nMake sure your config has: export default defineMCP({...})'
     );
   }
 
