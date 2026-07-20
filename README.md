@@ -1,31 +1,32 @@
 # mcp-connect
 
-> Dead simple MCP (Model Context Protocol) server for exposing your app functions to AI agents
+> Dead simple Model Context Protocol (MCP) server for exposing your app functions to AI agents.
 
 [![npm version](https://badge.fury.io/js/mcp-connect.svg)](https://www.npmjs.com/package/mcp-connect)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Claude Desktop Setup (5 Minutes)
+mcp-connect shifts MCP server creation into high gear. Define your tools in JavaScript once and instantly run them under three modes: **Stdio** (local IDE child processes), **SSE / HTTP** (exposing local ports), or **Secure Cloud Tunneling** (connecting behind NATs/firewalls via a proxy gateway).
+
+---
+
+## 🚀 Setup & Initialization (5 Minutes)
 
 ### Step 1: Install mcp-connect
-
 ```bash
+# Global CLI install
 npm install -g @myatkyawthu/mcp-connect
+
+# Or local project dependency
+npm install @myatkyawthu/mcp-connect
 ```
-### Step 2: Create mcp.config.js
 
-### Step 2: Create Your MCP Server
-
+### Step 2: Initialize Config File
+Run the initializer command in your project directory:
 ```bash
-# Navigate to your project directory
-cd your-project
-
-# Generate sample config
 mcp-connect init
 ```
 
-This creates `mcp.config.js` with example tools:
-
+This creates a default `mcp.config.js` containing example tools:
 ```javascript
 import { defineMCP } from "@myatkyawthu/mcp-connect";
 
@@ -33,137 +34,135 @@ export default defineMCP({
   name: "My MCP App",
   version: "1.0.0",
   tools: [
+    // Simple tuple format: [name, handler]
     ["hello", async ({ name = "World" }) => `Hello ${name}!`],
-    ["echo", async ({ message }) => `Echo: ${message}`]
+
+    // Advanced format with description and schema validation
+    {
+      name: "echo",
+      description: "Echo back the input",
+      schema: {
+        type: "object",
+        properties: {
+          message: { type: "string", description: "Message to echo" }
+        },
+        required: ["message"]
+      },
+      handler: async ({ message }) => `Echo: ${message}`
+    }
   ]
 });
 ```
-### Step 3: Test Locally
 
-### Step 3: Configure Claude Desktop
+---
 
-Open Claude Desktop config file:
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+## 🌐 Three Running Modes
 
-Add your MCP server:
+### 1. Stdio Mode (Default)
+Ideal for standard local IDE integrations (like Cursor, Claude Desktop, or VS Code). Runs as a child process using stdin/stdout.
 
+```bash
+# Runs the server using mcp.config.js in current directory
+mcp-connect
+
+# Or supply an explicit config file path
+mcp-connect /path/to/your/mcp.config.js
+```
+
+**Example Claude Desktop Configuration (`claude_desktop_config.json`)**:
 ```json
 {
   "mcpServers": {
     "my-app": {
       "command": "mcp-connect",
-      "args": ["C:/full/path/to/your/mcp.config.js"]
+      "args": ["/absolute/path/to/mcp.config.js"]
     }
   }
 }
 ```
 
-**Important**: Use the full absolute path to your `mcp.config.js` file.
+### 2. HTTP / SSE Mode (`--port`)
+Exposes the MCP server over HTTP/SSE. AI clients connect to the `/sse` stream and POST payloads to the `/message` endpoint.
 
-### Step 4: Start & Test
+```bash
+# Starts local SSE transport on port 8080
+mcp-connect --port 8080
+```
 
-1. **Restart Claude Desktop** completely
-2. **Test connection**: Ask Claude *"What tools do you have available?"*
-3. **Use your tools**: Try *"Hello there!"* or *"Echo this message"*
+### 3. Secure Reverse Proxy Tunnel (`--tunnel`)
+Connects your local MCP server to a public Relay Gateway via an outbound client connection. Exposes your local server transiently to cloud agents (like Claude.ai web) without needing to configure local ports, firewalls, or dynamic DNS.
 
-✅ **Done!** Your functions are now available to Claude Desktop.
+```bash
+# Outbound tunnel proxy pointing to a relay gateway
+mcp-connect --tunnel
+```
+
+To run your own self-hosted Relay Gateway:
+```bash
+# Boot the routing relay service on port 4000
+mcp-connect relay --port 4000
+```
 
 ---
 
-## 📖 Tool Definition Guide
+## 🖥️ Local Inspector Console
 
-### Simple Format (Recommended)
+When running in **SSE** or **Tunnel** modes, opening `http://localhost:<port>/` in your browser launches a built-in dark-themed developer dashboard:
+
+*   **Real-time Log Feed**: Trace method requests, call arguments, durations, and response bodies.
+*   **Mock Tool Executor**: Test and debug your tools directly from the browser by sending mock execution payloads.
+
+---
+
+## 🔒 Security Framework & Config Settings
+
+mcp-connect supports deep security validations inside `mcp.config.js`:
 
 ```javascript
-// Just name and function
-["toolName", async (args) => "result"]
-```
-## 🔧 CLI Usage
+export default defineMCP({
+  name: "Secure DB Server",
+  version: "1.0.0",
+  server: {
+    // 1. Config-driven transport and ports
+    transport: "hybrid",     // "stdio" | "sse" | "hybrid"
+    port: 8080,
 
-### Advanced Format (With Validation)
-
-```javascript
-{
-  name: "toolName",
-  description: "What this tool does",
-  schema: {
-    type: "object",
-    properties: {
-      param: { type: "string", description: "Parameter description" }
+    // 2. CORS origin filtering (allowlist)
+    cors: {
+      origins: ["https://claude.ai", "http://localhost:3000"]
     },
-    required: ["param"]
+
+    // 3. Authorization Tokens & Symmetric Encryption
+    tunnel: {
+      enabled: true,
+      token: "secret-token-key",                       // Enforces Bearer auth
+      encryptionKey: "my-32-byte-secret-aes-key-here"  // E2E AES-256-GCM payload encryption
+    }
   },
-  handler: async ({ param }) => `Result: ${param}`
-}
+  tools: [
+    {
+      name: "delete_record",
+      description: "Destructive database action",
+      confirm: true, // <── 4. Prompts developer on CLI for y/N confirmation before running!
+      handler: async ({ id }) => { ... }
+    }
+  ]
+});
 ```
 
-## 🛠 Development Commands
+---
+
+## 🔧 CLI Commands Reference
 
 ```bash
-# Start with auto-reload during development
-npm run dev
-
-# Start server with specific config file
-mcp-connect /path/to/your/mcp.config.js
-
-# Format code
-npm run format
-
-# Lint code
-npm run lint
+mcp-connect init                   # Generate default template config
+mcp-connect                        # Launch default config in Stdio mode
+mcp-connect --port <port>          # Launch SSE server and Inspector Console
+mcp-connect --tunnel               # Expose server via bridge tunnel
+mcp-connect relay --port <port>    # Run a Relay Gateway router
 ```
 
-## 🔧 Troubleshooting
-
-### Config File Not Found
-```bash
-# Create sample config
-mcp-connect init
-```
-
-### Claude Desktop Not Connecting
-1. Check config file path is absolute
-2. Restart Claude Desktop completely
-3. Check Claude Desktop logs for errors
-
-### Tool Not Working
-1. Verify tool syntax in `mcp.config.js`
-2. Check server logs for errors
-3. Test with simple tools first
-
-## 📋 Examples
-
-### File Operations
-```javascript
-["readFile", async ({ path }) => {
-  const fs = await import('fs/promises');
-  return await fs.readFile(path, 'utf8');
-}]
-```
-
-### API Calls
-```javascript
-["getWeather", async ({ city }) => {
-  const response = await fetch(`https://api.weather.com/${city}`);
-  return await response.json();
-}]
-```
-
-### Database Queries
-```javascript
-["getUser", async ({ id }) => {
-  // Your database logic here
-  return { id, name: "John Doe", email: "john@example.com" };
-}]
-```
-
-## 🌐 Other MCP Clients
-
-Claude Desktop setup is covered above. Tutorials for other MCP clients coming soon:
-- VS Code extensions
-- Custom applications
-- Other AI platforms
+---
 
 ## 📄 License
 
