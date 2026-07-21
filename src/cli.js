@@ -23,7 +23,7 @@ export default defineMCP({
   tools: [
     // Simple tuple format: [name, handler]
     ["hello", async ({ name = "World" }) => \`Hello \${name}!\`],
-    
+
     // Object format with schema validation
     {
       name: "echo",
@@ -72,10 +72,31 @@ async function main() {
       return;
     }
 
+    if (process.argv[2] === 'relay') {
+      const portIndex = process.argv.indexOf('--port');
+      const relayPort = portIndex !== -1 ? parseInt(process.argv[portIndex + 1], 10) : 4000;
+      const { MCPRelayServer } = await import('./server/relay.js');
+      const relay = new MCPRelayServer();
+      await relay.start(relayPort);
+      return;
+    }
+
     console.error('Starting MCP-Connect CLI...');
 
-    const configArg = process.argv[2];
+    // Parse --port flag
+    let port = null;
+    const portIndex = process.argv.indexOf('--port');
+    if (portIndex !== -1) {
+      port = parseInt(process.argv[portIndex + 1], 10);
+      if (!port || port < 1 || port > 65535) {
+        console.error('Invalid port. Usage: mcp-connect --port 3000');
+        process.exit(1);
+      }
+    }
+
+    // Find config path (skip flags)
     let configPath = null;
+    const configArg = process.argv.find((a, i) => i >= 2 && !a.startsWith('--') && process.argv[i - 1] !== '--port' && a !== 'relay');
 
     if (configArg) {
       const fullPath = resolve(configArg);
@@ -158,7 +179,7 @@ export default defineMCP({
           error.message.includes('Cannot resolve') ||
           error.message.includes('MODULE_NOT_FOUND')
         ) {
-          console.error("Make sure 'mcp-connect' is installed: npm install mcp-connect");
+          console.error('Make sure \'@myatkyawthu/mcp-connect\' is installed: npm install mcp-connect');
         } else if (error.message.includes('SyntaxError')) {
           console.error('Config file has syntax errors. Check your JavaScript syntax.');
         } else if (error.message.includes('ERR_MODULE_NOT_FOUND')) {
@@ -185,7 +206,23 @@ export default defineMCP({
     }
 
     const server = new MCPConnectServer(validatedConfig);
-    await server.start();
+
+    const finalPort = port || validatedConfig.server?.port;
+    const useSSE = !!finalPort || validatedConfig.server?.transport === 'sse' || validatedConfig.server?.transport === 'hybrid';
+    const useTunnel = process.argv.includes('--tunnel') || !!validatedConfig.server?.tunnel?.enabled;
+    const relayUrl = process.env.MCP_RELAY_URL || validatedConfig.server?.tunnel?.relayUrl || 'http://localhost:4000';
+
+    if (useSSE) {
+      await server.startSSE(finalPort || 3000);
+    } else {
+      await server.start();
+    }
+
+    if (useTunnel) {
+      server.startTunnel(relayUrl).catch((err) => {
+        console.error('Tunnel failed to start:', err.message);
+      });
+    }
 
     process.on('SIGINT', async () => {
       console.error('Shutting down...');
