@@ -1,51 +1,32 @@
 # mcp-connect
 
-> Dead simple Model Context Protocol (MCP) server for exposing your app functions to AI agents.
+> Dead simple MCP server framework. Define your tools as async functions — it handles the protocol, transport, security, and dashboard.
 
-[![npm version](https://badge.fury.io/js/mcp-connect.svg)](https://www.npmjs.com/package/mcp-connect)
+[![npm version](https://img.shields.io/npm/v/@myatkyawthu/mcp-connect.svg)](https://www.npmjs.com/package/@myatkyawthu/mcp-connect)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-mcp-connect shifts MCP server creation into high gear. Define your tools in JavaScript once and instantly run them under three modes: **Stdio** (local IDE child processes), **SSE / HTTP** (exposing local ports), or **Secure Cloud Tunneling** (connecting behind NATs/firewalls via a proxy gateway).
 
 ---
 
-## 🚀 Setup & Initialization (5 Minutes)
+## What is this?
 
-### Step 1: Install mcp-connect
-```bash
-# Global CLI install
-npm install -g @myatkyawthu/mcp-connect
+**Model Context Protocol (MCP)** is the standard way AI tools (Claude, Cursor, Cline, etc.) call your app's functions. Think of it like a plugin system — any MCP-compatible AI can discover and call your tools.
 
-# Or local project dependency
-npm install @myatkyawthu/mcp-connect
-```
+`mcp-connect` removes all the boilerplate. You write async functions. It handles the rest: JSON-RPC wiring, transport, schema advertisement, rate limiting, auth, error handling, and a live inspector dashboard.
 
-### Step 2: Initialize Config File
-Run the initializer command in your project directory:
-```bash
-mcp-connect init
-```
-
-This creates a default `mcp.config.js` containing example tools:
-```javascript
+```js
 import { defineMCP } from "@myatkyawthu/mcp-connect";
 
 export default defineMCP({
-  name: "My MCP App",
+  name: "my-server",
   version: "1.0.0",
   tools: [
-    // Simple tuple format: [name, handler]
     ["hello", async ({ name = "World" }) => `Hello ${name}!`],
-
-    // Advanced format with description and schema validation
     {
       name: "echo",
       description: "Echo back the input",
       schema: {
         type: "object",
-        properties: {
-          message: { type: "string", description: "Message to echo" }
-        },
+        properties: { message: { type: "string" } },
         required: ["message"]
       },
       handler: async ({ message }) => `Echo: ${message}`
@@ -56,20 +37,46 @@ export default defineMCP({
 
 ---
 
-## 🌐 Three Running Modes
-
-### 1. Stdio Mode (Default)
-Ideal for standard local IDE integrations (like Cursor, Claude Desktop, or VS Code). Runs as a child process using stdin/stdout.
+## Install
 
 ```bash
-# Runs the server using mcp.config.js in current directory
-mcp-connect
+# Global CLI (recommended)
+npm install -g @myatkyawthu/mcp-connect
 
-# Or supply an explicit config file path
-mcp-connect /path/to/your/mcp.config.js
+# Or as a project dependency
+npm install @myatkyawthu/mcp-connect
 ```
 
-**Example Claude Desktop Configuration (`claude_desktop_config.json`)**:
+Requires **Node.js 18+**.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Create a config file
+mcp-connect init
+
+# 2. Edit mcp.config.js and add your tools
+
+# 3. Run it
+mcp-connect                  # STDIO mode (for Claude Desktop)
+mcp-connect --port 3000      # SSE/HTTP mode (for web clients, IDEs)
+```
+
+---
+
+## Three Modes — Pick One
+
+### Mode 1 — STDIO (Local, for Claude Desktop)
+
+Your AI tool spawns the process. Communication happens via stdin/stdout pipes. No port, no HTTP.
+
+```bash
+mcp-connect mcp.config.js
+```
+
+**Claude Desktop config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
@@ -81,70 +88,250 @@ mcp-connect /path/to/your/mcp.config.js
 }
 ```
 
-### 2. HTTP / SSE Mode (`--port`)
-Exposes the MCP server over HTTP/SSE. AI clients connect to the `/sse` stream and POST payloads to the `/message` endpoint.
+---
+
+### Mode 2 — SSE / HTTP (Deployed on a Server)
+
+Starts an HTTP server. AI clients connect to `/sse` and send requests to `/message`. **This is the mode for deploying on a VPS or cloud** so any client can reach it over the internet.
 
 ```bash
-# Starts local SSE transport on port 8080
-mcp-connect --port 8080
+mcp-connect mcp.config.js --port 3000
 ```
 
-### 3. Secure Reverse Proxy Tunnel (`--tunnel`)
-Connects your local MCP server to a public Relay Gateway via an outbound client connection. Exposes your local server transiently to cloud agents (like Claude.ai web) without needing to configure local ports, firewalls, or dynamic DNS.
-
-```bash
-# Outbound tunnel proxy pointing to a relay gateway
-mcp-connect --tunnel
+Once deployed behind HTTPS, clients connect to:
+```
+https://yourserver.com/sse
 ```
 
-To run your own self-hosted Relay Gateway:
+**Client compatibility:**
+
+| Client | SSE Support |
+| :--- | :---: |
+| Claude.ai (web) | ✅ |
+| Cursor | ✅ |
+| Cline (VS Code) | ✅ |
+| Windsurf | ✅ |
+| Continue.dev | ✅ |
+| Zed | ✅ |
+| Claude Desktop | ❌ (STDIO only) |
+
+**Endpoints exposed:**
+
+| Endpoint | Description |
+| :--- | :--- |
+| `GET /sse` | AI client connects here (long-lived SSE stream) |
+| `POST /message` | AI client sends JSON-RPC requests |
+| `GET /health` | JSON health check with tool list |
+| `GET /` | Live inspector dashboard |
+
+---
+
+### Mode 3 — Tunnel (Behind NAT, No Open Port)
+
+If your machine can't receive inbound connections (home laptop, office network), use the tunnel. Run a tiny relay on any $5/month VPS — your local machine connects outbound to it. Remote clients hit the VPS and get proxied to your machine.
+
+**Step 1 — Start the relay on your VPS (one-time setup):**
 ```bash
-# Boot the routing relay service on port 4000
 mcp-connect relay --port 4000
 ```
 
+**Step 2 — Start your server on your local machine:**
+```bash
+mcp-connect mcp.config.js --port 3111 --tunnel
+```
+
+Your terminal will print:
+```
+MCP Tunnel bridge active!
+Remote SSE endpoint: http://your-vps.com/t/<tunnelId>/sse
+```
+
+Share that URL with any MCP client. Done.
+
+> The relay auto-reconnects if the tunnel drops. All payloads can be AES-256-GCM encrypted end-to-end (see Security section below).
+
 ---
 
-## 🖥️ Local Inspector Console
+## Tool Definition Formats
 
-When running in **SSE** or **Tunnel** modes, opening `http://localhost:<port>/` in your browser launches a built-in dark-themed developer dashboard:
+### Short format (tuple)
+For simple one-liner tools:
+```js
+["toolName", async (args) => result]
+```
 
-*   **Real-time Log Feed**: Trace method requests, call arguments, durations, and response bodies.
-*   **Mock Tool Executor**: Test and debug your tools directly from the browser by sending mock execution payloads.
+### Full format (object)
+For tools that need schema validation, descriptions, or a security confirmation gate:
+```js
+{
+  name: "delete_record",
+  description: "Permanently delete a record by ID",
+  schema: {
+    type: "object",
+    properties: {
+      id: { type: "string", description: "Record ID to delete" }
+    },
+    required: ["id"]
+  },
+  confirm: true,   // asks "y/N?" in terminal before executing
+  handler: async ({ id }) => {
+    await db.delete(id);
+    return `Deleted ${id}`;
+  }
+}
+```
+
+The AI receives the schema and knows exactly what arguments to pass. You don't have to document it separately.
 
 ---
 
-## 🔒 Security Framework & Config Settings
+## Security
 
-mcp-connect supports deep security validations inside `mcp.config.js`:
+All security features are optional — enable only what you need.
 
-```javascript
+### Bearer Token Auth
+
+Protect the `/sse` and `/message` endpoints. Any request without the correct token gets a `401`.
+
+```bash
+# Set via environment variable
+MCP_TUNNEL_TOKEN=my-secret-token mcp-connect mcp.config.js --port 3000
+```
+
+Or in config:
+```js
+server: {
+  tunnel: { token: "my-secret-token" }
+}
+```
+
+Clients must send: `Authorization: Bearer my-secret-token`
+
+---
+
+### CORS Origin Allowlist
+
+Restrict which origins can connect. Without this, all origins are allowed (`*`).
+
+```js
+server: {
+  cors: {
+    origins: ["https://claude.ai", "https://cursor.sh"]
+  }
+}
+```
+
+Requests from unlisted origins get `403 Origin not allowed`.
+
+---
+
+### End-to-End Encryption (Tunnel mode)
+
+Encrypt all payloads over the tunnel so the relay server only sees ciphertext. Uses AES-256-GCM.
+
+```js
+server: {
+  tunnel: {
+    encryptionKey: "my-32-char-passphrase-or-64hex"
+  }
+}
+```
+
+The relay cannot read your tool calls or responses even if it's compromised.
+
+---
+
+### Confirm Gate for Dangerous Tools
+
+Add `confirm: true` to any tool. Before it runs, the terminal prompts you:
+```
+⚠️  [MCP SECURITY] Allow tool "delete_record" execution? (y/N):
+```
+
+The tool only runs if you type `y`. Otherwise it's rejected with an error.
+
+---
+
+## Built-in Protections (Always On)
+
+These run automatically without any config:
+
+| Protection | Detail |
+| :--- | :--- |
+| **Rate limiting** | 100 requests/minute per server |
+| **Tool timeout** | 30 seconds max per tool call |
+| **Response size cap** | 1MB max, truncated if exceeded |
+| **Error sanitization** | Stack traces stripped before returning to AI |
+| **Circular reference guard** | Safe JSON serialization |
+
+---
+
+## Inspector Dashboard
+
+Available at `http://localhost:<port>/` whenever running in SSE mode.
+
+- **Logs tab** — live feed of every tool call with timestamp, duration, pass/fail status. Click any row to see full request args and response.
+- **Test Tool tab** — pick a tool, fill in args as JSON, hit Execute. See the response immediately. No AI client needed for debugging.
+
+The dashboard connects to `/api/events` over SSE — it updates in real-time without refreshing.
+
+---
+
+## Full Config Reference
+
+```js
+import { defineMCP } from "@myatkyawthu/mcp-connect";
+
 export default defineMCP({
-  name: "Secure DB Server",
-  version: "1.0.0",
-  server: {
-    // 1. Config-driven transport and ports
-    transport: "hybrid",     // "stdio" | "sse" | "hybrid"
-    port: 8080,
+  name: "my-server",       // required
+  version: "1.0.0",        // required
+  description: "...",      // optional
 
-    // 2. CORS origin filtering (allowlist)
+  server: {
+    port: 3000,            // optional — same as --port flag
+
     cors: {
-      origins: ["https://claude.ai", "http://localhost:3000"]
+      origins: [           // optional — allowlist of origins
+        "https://claude.ai",
+        "http://localhost:5173"
+      ]
     },
 
-    // 3. Authorization Tokens & Symmetric Encryption
     tunnel: {
-      enabled: true,
-      token: "secret-token-key",                       // Enforces Bearer auth
-      encryptionKey: "my-32-byte-secret-aes-key-here"  // E2E AES-256-GCM payload encryption
+      enabled: true,       // optional — same as --tunnel flag
+      relayUrl: "http://your-vps.com:4000",  // relay address
+      token: "secret",     // bearer token for auth
+      encryptionKey: "..."  // AES-256-GCM key (passphrase or 64-char hex)
     }
   },
+
   tools: [
+    // Short format
+    ["hello", async ({ name = "World" }) => `Hello ${name}!`],
+
+    // Full format
     {
-      name: "delete_record",
-      description: "Destructive database action",
-      confirm: true, // <── 4. Prompts developer on CLI for y/N confirmation before running!
-      handler: async ({ id }) => { ... }
+      name: "echo",
+      description: "Echo back the input",
+      schema: {
+        type: "object",
+        properties: {
+          message: { type: "string" }
+        },
+        required: ["message"]
+      },
+      handler: async ({ message }) => `Echo: ${message}`
+    },
+
+    // Dangerous tool with confirmation gate
+    {
+      name: "delete_all",
+      description: "Wipe everything",
+      confirm: true,
+      handler: async () => {
+        await nuke();
+        return "Done.";
+      }
     }
   ]
 });
@@ -152,18 +339,56 @@ export default defineMCP({
 
 ---
 
-## 🔧 CLI Commands Reference
+## CLI Reference
 
 ```bash
-mcp-connect init                   # Generate default template config
-mcp-connect                        # Launch default config in Stdio mode
-mcp-connect --port <port>          # Launch SSE server and Inspector Console
-mcp-connect --tunnel               # Expose server via bridge tunnel
-mcp-connect relay --port <port>    # Run a Relay Gateway router
+mcp-connect init                        # Scaffold mcp.config.js in current directory
+mcp-connect [config.js]                 # Start in STDIO mode
+mcp-connect [config.js] --port <port>   # Start in SSE/HTTP mode
+mcp-connect [config.js] --tunnel        # Start with outbound tunnel
+mcp-connect relay --port <port>         # Run a relay gateway (deploy on VPS)
+```
+
+Config file defaults to `mcp.config.js` in the current directory if not specified.
+
+---
+
+## Deployment Recipes
+
+### Deploy on Railway / Render / Fly.io
+
+1. Push your repo with `mcp.config.js`
+2. Set start command: `mcp-connect mcp.config.js --port 3000`
+3. Set env var: `MCP_TUNNEL_TOKEN=your-secret`
+4. Add your domain/URL to your AI client as the MCP server URL: `https://yourapp.railway.app/sse`
+
+### Self-hosted VPS (nginx + HTTPS)
+
+```nginx
+location / {
+    proxy_pass http://localhost:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Connection '';          # keep SSE alive
+    proxy_buffering off;                     # required for SSE streaming
+    proxy_cache off;
+    proxy_set_header Host $host;
+}
+```
+
+Then run: `mcp-connect mcp.config.js --port 3000`
+
+### Laptop behind NAT (tunnel setup)
+
+```bash
+# On VPS
+mcp-connect relay --port 4000
+
+# On laptop
+MCP_TUNNEL_TOKEN=secret mcp-connect mcp.config.js --port 3111 --tunnel
 ```
 
 ---
 
-## 📄 License
+## License
 
 MIT © [myat-kyaw-thu](https://github.com/myat-kyaw-thu)

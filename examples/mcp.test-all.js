@@ -3,7 +3,7 @@
  * A single config that exercises every feature of @myatkyawthu/mcp-connect.
  * Run it in different modes to test each feature (see LOCAL_TEST_GUIDE.md).
  */
-import { defineMCP } from '../../src/index.js';
+import { defineMCP } from '../src/index.js';
 
 export default defineMCP({
   name: 'mcp-connect-feature-test',
