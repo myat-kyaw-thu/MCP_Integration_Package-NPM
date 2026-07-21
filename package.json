@@ -1,18 +1,14 @@
 {
   "name": "@myatkyawthu/mcp-connect",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Dead simple MCP (Model Context Protocol) server for exposing your app functions to AI agents",
   "type": "module",
   "main": "./src/index.js",
-  "module": "./src/index.js",
   "exports": {
-    ".": {
-      "import": "./src/index.js",
-      "require": "./src/index.js"
-    }
+    ".": "./src/index.js"
   },
   "bin": {
-    "mcp-connect": "src/cli.js"
+    "mcp-connect": "./src/cli.js"
   },
   "files": [
     "src",
