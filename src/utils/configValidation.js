@@ -211,7 +211,7 @@ export class ConfigValidator {
       this.validateToolDescription(tool.description, `${fieldPrefix}.description`);
       this.validateToolSchema(tool.schema, `${fieldPrefix}.schema`);
 
-      const knownProps = ['name', 'handler', 'description', 'schema'];
+      const knownProps = ['name', 'handler', 'description', 'schema', 'confirm'];
       const unknownProps = Object.keys(tool).filter((prop) => !knownProps.includes(prop));
       if (unknownProps.length > 0) {
         this.addWarning(
@@ -290,7 +290,8 @@ export class ConfigValidator {
     if (paramMatch) {
       const params = paramMatch[1].trim();
       if (params) {
-        const paramCount = params.split(',').filter(p => p.trim()).length;
+        const isDestructured = params.startsWith('{') || params.startsWith('[');
+        const paramCount = isDestructured ? 1 : params.split(',').filter((p) => p.trim()).length;
         if (paramCount > 1) {
           this.addError(
             fieldPath,

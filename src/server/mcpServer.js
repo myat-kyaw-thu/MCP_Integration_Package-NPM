@@ -8,7 +8,7 @@ import {
 import { createServer } from 'node:http';
 import { decrypt, encrypt } from '../utils/crypto.js';
 import { logger } from '../utils/logger.js';
-import { sanitizeErrorMessage, validateToolArguments } from '../utils/validation.js';
+import { sanitizeErrorMessage, validateArgsAgainstSchema, validateToolArguments } from '../utils/validation.js';
 import { getDashboardHTML } from './dashboard.js';
 
 const DEFAULT_TOOL_TIMEOUT = 30000;
@@ -150,6 +150,7 @@ export class MCPConnectServer {
           }
         }
         const validatedArgs = validateToolArguments(args);
+        validateArgsAgainstSchema(validatedArgs, tool.inputSchema);
 
         const toolPromise = Promise.resolve(tool.handler(validatedArgs));
         const result = await logger.timeAsync(

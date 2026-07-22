@@ -36,6 +36,40 @@ export function validateToolArguments(args) {
   return args;
 }
 
+/**
+ * Validate args against a JSON Schema definition (subset: required + type).
+ * No external deps — covers the common cases without pulling in ajv.
+ * @param {object} args
+ * @param {object} schema  - the tool's inputSchema
+ */
+export function validateArgsAgainstSchema(args, schema) {
+  if (!schema || typeof schema !== 'object') return;
+
+  // Check required fields
+  if (Array.isArray(schema.required)) {
+    for (const field of schema.required) {
+      if (args[field] === undefined || args[field] === null) {
+        throw new Error(`Missing required argument: "${field}"`);
+      }
+    }
+  }
+
+  // Check declared property types
+  if (schema.properties && typeof schema.properties === 'object') {
+    for (const [key, def] of Object.entries(schema.properties)) {
+      if (args[key] === undefined) continue; // optional — already handled above
+      if (!def || typeof def.type !== 'string') continue;
+
+      const actual = Array.isArray(args[key]) ? 'array' : typeof args[key];
+      if (actual !== def.type) {
+        throw new Error(
+          `Argument "${key}" must be of type ${def.type}, got ${actual}`
+        );
+      }
+    }
+  }
+}
+
 export function sanitizeErrorMessage(error) {
   if (error instanceof Error) {
     // Remove sensitive information from stack traces
