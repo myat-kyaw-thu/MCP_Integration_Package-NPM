@@ -2,6 +2,10 @@ import { formatValidationErrors, validateConfig } from './utils/configValidation
 import { logger } from './utils/logger.js';
 
 export function defineMCP(config) {
+  if (config && config._isMCPConfig) {
+    return config;
+  }
+
   const validationResult = validateConfig(config);
 
   if (!validationResult.isValid) {
@@ -33,11 +37,11 @@ export function defineMCP(config) {
         handler,
       };
     } else {
-      const { name, handler, description, schema, confirm } = tool;
+      const { name, handler, description, schema, inputSchema, confirm } = tool;
       return {
         name: name.trim(),
         description: description || `Tool: ${name}`,
-        inputSchema: schema || {
+        inputSchema: schema || inputSchema || {
           type: 'object',
           properties: {},
           additionalProperties: true,
@@ -54,5 +58,6 @@ export function defineMCP(config) {
     description: config.description,
     server: config.server || {},
     tools: mcpTools,
+    _isMCPConfig: true,
   };
 }

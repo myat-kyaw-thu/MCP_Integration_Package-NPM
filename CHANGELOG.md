@@ -4,6 +4,17 @@ All notable changes to `@myatkyawthu/mcp-connect` are documented here.
 
 ---
 
+## [0.3.3] — 2026-07-22
+
+### Bug Fixes
+
+- **Fixed double-validation bug wiping tool schemas at runtime**
+  When a config file exported the result of `defineMCP()`, the CLI was executing `defineMCP()` a second time. This second invocation parsed the normalized tools and wiped out the `schema` metadata because it was already converted to `inputSchema` in the first run, rendering runtime schema validation inactive. 
+  - Added early return guard (`_isMCPConfig` flag) in `defineMCP` to prevent double processing.
+  - Added fallback check to parse `inputSchema` keys if already normalized.
+
+---
+
 ## [0.3.2] — 2026-07-22
 
 ### Bug Fixes
